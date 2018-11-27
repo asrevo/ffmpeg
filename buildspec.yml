@@ -1,0 +1,28 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - mvn clean install -Pbuild-resource -DskipTests=true -Ddocker.image.prefix=$DOCKER_HUB_USERNAME -Dorg.revo.env.buckets.static.domainname=$ORG_REVO_ENV_STATICCLOUDFRONTENDPOINT
+  post_build:
+    commands:
+      - echo Pushing the Docker image...
+
+      - docker login -u="$DOCKER_HUB_USERNAME" -p="$DOCKER_HUB_PASSWORD";
+      - docker push $DOCKER_HUB_USERNAME/$IMAGE_REPO_NAME:latest
+
+#      - docker tag ashraf1abdelrasool/$IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+#      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+#      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+      - rm -r -f src/main/resources/ui-static/node
+      - rm -r -f src/main/resources/ui-static/node_modules
+      - rm -r -f target
+      - aws s3 cp --recursive --acl public-read ./ s3://$AWS_STATIC_BUCKET/$IMAGE_REPO_NAME
+artifacts:
+  files:
+    - '**/*'

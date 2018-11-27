@@ -1,0 +1,15 @@
+---
+applications:
+- name: ffmpeg
+  memory: 1GB
+  disk_quota: 2GB
+  instances: 1
+  random-route: true
+  buildpack: java_buildpack
+  path: target/ffmpeg-0.0.1-SNAPSHOT.jar
+  services:
+  - CONFIG_CREDENTIALS
+  - EUREKA_CREDENTIALS
+  env:
+    ORG_REVO_ENV_CONFIG_EXTERNALURL: configasrevo.cfapps.io
+    SPRING_PROFILES_ACTIVE: default,prod
