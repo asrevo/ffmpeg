@@ -6,7 +6,7 @@ applications:
   instances: 1
   random-route: true
   buildpack: java_buildpack
-  path: target/ffmpeg-0.0.1-SNAPSHOT.jar
+  path: target/ffmpeg-0.0.1.RELEASE.jar
   services:
   - CONFIG_CREDENTIALS
   - EUREKA_CREDENTIALS
