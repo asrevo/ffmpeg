@@ -1,5 +1,6 @@
 package org.revo.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.revo.Config.Processor;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
  * Created by ashraf on 23/04/17.
  */
 @MessageEndpoint
+@Slf4j
 public class Receiver {
     @Autowired
     private FfmpegService ffmpegService;
@@ -31,33 +33,33 @@ public class Receiver {
     @StreamListener(value = Processor.ffmpeg_converter_pop)
     @SendTo(value = Processor.bento4_hls)
     public Master convert(Message<Master> master) throws IOException {
-        return ffmpegService.mp4(master.getPayload());
+        log.info("receive ffmpeg_converter_pop " + master.getPayload().getId());
+        Master mp4 = ffmpegService.mp4(master.getPayload());
+        log.info("send bento4_hls " + mp4.getId());
+        return mp4;
     }
 
     @StreamListener(value = Processor.ffmpeg_queue)
     @SendTo(value = Processor.tube_info)
     public Master queue(Message<Master> master) throws IOException {
+        log.info("receive ffmpeg_queue " + master.getPayload().getId());
         Master queue = ffmpegService.queue(master.getPayload());
         List<IndexImpl> impls = queue.getImpls();
         if (queue.getFormat().equalsIgnoreCase("QuickTime / MOV")) {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
+            log.info("send bento4_hls " + queue.getId());
             processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());
         } else {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
+            log.info("send ffmpeg_converter_push " + queue.getId());
             processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority).build());
         }
         for (int i = 0; i < impls.stream().skip(1).collect(Collectors.toList()).size(); i++) {
             queue.setImpls(Collections.singletonList(impls.get(i + 1)));
+            log.info("send ffmpeg_converter_push " + queue.getId());
             processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
         }
+        log.info("send tube_info " + queue.getId());
         return queue;
     }
 }
-//        processor.ToFeedBack_push().send(withPayload(new Stater(media.getPayload(), Queue.FFMPEG_MP4, State.ON_GOING)).build());
-//        processor.ToFeedBack_push().send(withPayload(new Stater(media.getPayload(), Queue.BENTO4_HLS, State.QUEUED)).build());
-//        processor.ToFeedBack_push().send(withPayload(new Stater(media.getPayload(), Queue.FFMPEG_MP4, State.UNDER_GOING)).build());
-//        processor.ToFeedBack_push().send(withPayload(new Stater(media.getPayload(), Queue.FFMPEG_PNG, State.ON_GOING)).build());
-//send  queue.getImpls().get(0) to bento4
-//            send to queue.getImpls().get(0) to mp4 with 20 priority
-//            send to queue.getImpls().get(i>0) to mp4 with less 15 priority
-//        processor.ToFeedBack_push().send(withPayload(new Stater(media.getPayload(), Queue.FFMPEG_PNG, State.UNDER_GOING)).build());
