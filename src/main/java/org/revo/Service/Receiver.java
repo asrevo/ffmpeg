@@ -34,7 +34,7 @@ public class Receiver {
     @SendTo(value = Processor.bento4_hls)
     public Master convert(Message<Master> master) throws IOException {
         log.info("receive ffmpeg_converter_pop " + master.getPayload().getId());
-        Master mp4 = ffmpegService.mp4(master.getPayload());
+        Master mp4 = ffmpegService.convert(master.getPayload());
         log.info("send bento4_hls " + mp4.getId());
         return mp4;
     }

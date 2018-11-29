@@ -1,5 +1,6 @@
 package org.revo.Service.Impl;
 
+import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,9 +42,9 @@ public class FfmpegServiceImpl implements FfmpegService {
 
 
     @Override
-    public Master mp4(Master payload) throws IOException {
+    public Master convert(Master payload) throws IOException {
         Path source = s3Service.pull(payload.getId());
-        Path converted = convert(source, payload.getImpls().get(0));
+        Path converted = doConversion(source, payload.getImpls().get(0));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
         converted.toFile().delete();
         source.toFile().delete();
@@ -53,7 +55,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     public Master queue(Master master) throws IOException {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         File image = image(probe);
-        s3Service.pushImage(master.getId()+ ".png", image);
+        s3Service.pushImage(master.getId() + ".png", image);
         image.delete();
         return info(probe, master);
     }
@@ -82,7 +84,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         return thumbnail.toFile();
     }
 
-    private Path convert(Path in, IndexImpl index) throws IOException {
+    private Path doConversion(Path in, IndexImpl index) throws IOException {
         Path out = in.getParent().resolve(index.getIndex());
         Integer width = Integer.valueOf(index.getResolution().split("X")[0]);
         Integer height = Integer.valueOf(index.getResolution().split("X")[1]);
@@ -95,5 +97,19 @@ public class FfmpegServiceImpl implements FfmpegService {
         executor.createJob(builder, progress -> {
         }).run();
         return out;
+    }
+
+    public static void main(String[] args) {
+        FfmpegServiceImpl ffmpegService = new FfmpegServiceImpl();
+        try {
+            ffmpegService.fFprobe = new FFprobe(System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffprobe");
+            FFmpeg ffmpeg = new FFmpeg(System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffmpeg");
+            ffmpegService.executor = new FFmpegExecutor(ffmpeg, ffmpegService.fFprobe);
+
+            Path out = ffmpegService.doConversion(Paths.get("/home/ashraf/ffmpeg/bin/a.mkv"), new IndexImpl("5bfd3df1ad8ce6617f9bf635", "1280X720", Status.BINDING));
+            System.out.println(out);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
