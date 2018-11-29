@@ -6,23 +6,33 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
 
 public interface Processor {
-    String ToFfmpeg_mp4 = "ToFfmpeg_mp4";
+    String ffmpeg_queue = "ffmpeg_queue";
 
-    @Input("ToFfmpeg_mp4")
-    MessageChannel ToFfmpeg_mp4();
+    @Input("ffmpeg_queue")
+    MessageChannel ffmpeg_queue();
 
-    String ToFfmpeg_png = "ToFfmpeg_png";
+    String ffmpeg_converter_pop = "ffmpeg_converter_pop";
 
-    @Input("ToFfmpeg_png")
-    MessageChannel ToFfmpeg_png();
+    @Input("ffmpeg_converter_pop")
+    MessageChannel ffmpeg_converter_pop();
 
-    String ToBento4_hls = "ToBento4_hls";
+    String ffmpeg_converter_push = "ffmpeg_converter_push";
 
-    @Output("ToBento4_hls")
-    SubscribableChannel ToBento4_hls();
+    @Output("ffmpeg_converter_push")
+    SubscribableChannel ffmpeg_converter_push();
 
-    String ToFeedBack_push = "ToFeedBack_push";
+    String bento4_hls = "bento4_hls";
 
-    @Output("ToFeedBack_push")
-    MessageChannel ToFeedBack_push();
+    @Output("bento4_hls")
+    SubscribableChannel bento4_hls();
+
+    String tube_info = "tube_info";
+
+    @Output("tube_info")
+    SubscribableChannel tube_info();
+
+    String feedBack_push = "feedBack_push";
+
+    @Output("feedBack_push")
+    MessageChannel feedBack_push();
 }

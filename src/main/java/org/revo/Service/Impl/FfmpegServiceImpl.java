@@ -1,35 +1,43 @@
 package org.revo.Service.Impl;
 
-import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
-import org.revo.Domain.Base;
-import org.revo.Domain.Index;
+import net.bramp.ffmpeg.probe.FFmpegStream;
+import org.revo.Config.Env;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
+import org.revo.Domain.Status;
 import org.revo.Service.FfmpegService;
-import org.revo.Service.ImageService;
 import org.revo.Service.S3Service;
+import org.revo.Service.SignedUrlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.revo.Domain.IndexImpl.list;
+import static org.revo.Domain.Resolution.getLess;
 
 @Service
 public class FfmpegServiceImpl implements FfmpegService {
-    @Autowired
-    private ImageService imageService;
     @Autowired
     private S3Service s3Service;
     @Autowired
     private FFmpegExecutor executor;
     @Autowired
     private FFprobe fFprobe;
+    @Autowired
+    private SignedUrlService signedUrlService;
+    @Autowired
+    private Env env;
+
 
     @Override
     public Master mp4(Master payload) throws IOException {
@@ -42,17 +50,36 @@ public class FfmpegServiceImpl implements FfmpegService {
     }
 
     @Override
-    public void png(Base base) throws IOException {
-        Path source = s3Service.pull(base.getId());
-        File fullImage = imageService.convertImage(source.toFile());
-        if (source != null) {
-            s3Service.pushImage(base.getId() + ".png", fullImage);
-            File resize = imageService.resize(fullImage, 400, 320);
-            s3Service.pushImage(base.getId() + "_" + 400 + "X" + 320 + ".png", resize);
-            fullImage.delete();
-            resize.delete();
-        }
-        source.toFile().delete();
+    public Master queue(Master master) throws IOException {
+        FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
+        File image = image(probe);
+        s3Service.pushImage(master.getId()+ ".png", image);
+        image.delete();
+        return info(probe, master);
+    }
+
+    private Master info(FFmpegProbeResult probe, Master master) {
+        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).map(it -> it.width + "X" + it.height).collect(Collectors.joining()));
+        master.setTime(probe.getFormat().duration);
+        master.setFormat(probe.getFormat().format_long_name);
+        master.setStream("#EXTM3U\n#EXT-X-VERSION:4\n# Media Playlists\n");
+        master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
+        List<IndexImpl> list = list(getLess(master.getResolution()));
+        list.add(0, new IndexImpl(master.getId(), master.getResolution(), Status.BINDING));
+        master.setImpls(list);
+        return master;
+    }
+
+    private File image(FFmpegProbeResult probe) throws IOException {
+        Path thumbnail = Files.createTempFile("thumbnail", ".png");
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(probe)
+                .addOutput(thumbnail.toString())
+                .setFrames(1)
+                .setVideoFilter("select='gte(n\\,10)',scale=320:-1").done();
+        executor.createJob(builder, progress -> {
+        }).run();
+        return thumbnail.toFile();
     }
 
     private Path convert(Path in, IndexImpl index) throws IOException {
