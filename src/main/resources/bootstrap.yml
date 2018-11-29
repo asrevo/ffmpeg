@@ -5,7 +5,6 @@ org:
         internalurl: localhost:8761
       config:
         internalurl: localhost:8888
-        EXTERNALURL: configasrevo.cfapps.io
       schema: http
 server:
   port: 8083
@@ -14,7 +13,7 @@ spring:
     name: ffmpeg
   cloud:
     config:
-      uri: http://revo:revo@${org.revo.env.config.externalurl:${org.revo.env.config.internalurl}}
+      uri: http://${vcap.services.CONFIG_CREDENTIALS.credentials.username}:${vcap.services.CONFIG_CREDENTIALS.credentials.password}@${org.revo.env.config.externalurl:${org.revo.env.config.internalurl}}
   profiles:
     active: default,prod
 eureka:
@@ -26,4 +25,4 @@ eureka:
     nonSecurePort: 80
   client:
     serviceUrl:
-      defaultZone: http://revo:revo@${org.revo.env.eureka.externalurl:${org.revo.env.eureka.internalurl}}/eureka/
+      defaultZone: http://${vcap.services.EUREKA_CREDENTIALS.credentials.username}:${vcap.services.EUREKA_CREDENTIALS.credentials.password}@${org.revo.env.eureka.externalurl:${org.revo.env.eureka.internalurl}}/eureka/
