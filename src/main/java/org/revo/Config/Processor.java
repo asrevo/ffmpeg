@@ -31,8 +31,8 @@ public interface Processor {
     @Output("tube_info")
     MessageChannel tube_info();
 
-    String feedBack_push = "feedBack_push";
+    String feedback_queue = "feedback_queue";
 
-    @Output("feedBack_push")
-    MessageChannel feedBack_push();
+    @Output("feedback_queue")
+    MessageChannel feedback_queue();
 }
