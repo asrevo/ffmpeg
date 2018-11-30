@@ -59,7 +59,6 @@ public class FfmpegServiceImpl implements FfmpegService {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         File image = image(probe, master.getId());
         s3Service.pushImage(master.getId() + ".png", image);
-        image.delete();
         return info(probe, master);
     }
 
@@ -76,7 +75,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     }
 
     private File image(FFmpegProbeResult probe, String id) throws IOException {
-        Path thumbnail = tempFileService.tempFile("image", id + ".png");
+        Path thumbnail = tempFileService.tempFile("queue", id + ".png");
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(probe)
                 .addOutput(thumbnail.toString())
