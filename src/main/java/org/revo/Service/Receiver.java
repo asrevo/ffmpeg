@@ -64,6 +64,7 @@ public class Receiver {
             processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
         }
         log.info("send tube_info " + queue.getId());
+        queue.setImpls(impls);
         return queue;
     }
 }
