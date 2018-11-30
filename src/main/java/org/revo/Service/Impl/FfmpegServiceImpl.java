@@ -1,7 +1,6 @@
 package org.revo.Service.Impl;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
@@ -21,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -84,37 +82,22 @@ public class FfmpegServiceImpl implements FfmpegService {
                 .addOutput(thumbnail.toString())
                 .setFrames(1)
                 .setVideoFilter("select='gte(n\\,10)',scale=320:-1").done();
-        executor.createJob(builder, progress -> {
-        }).run();
+        executor.createJob(builder).run();
         return thumbnail.toFile();
     }
 
     private Path doConversion(Path in, IndexImpl index) throws IOException {
         Path out = in.getParent().resolve(index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
-        Integer width = Integer.valueOf(index.getResolution().split("X")[0]);
-        Integer height = Integer.valueOf(index.getResolution().split("X")[1]);
+        String[] split = index.getResolution().split("X");
+        Integer width = Integer.valueOf(split[0]);
+        Integer height = Integer.valueOf(split[1]);
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(fFprobe.probe(in.toString()))
                 .addOutput(out.toString())
                 .setFormat("mp4")
                 .setVideoResolution(width, height)
                 .done();
-        executor.createJob(builder, progress -> {
-        }).run();
+        executor.createJob(builder).run();
         return out;
-    }
-
-    public static void main(String[] args) {
-        FfmpegServiceImpl ffmpegService = new FfmpegServiceImpl();
-        try {
-            ffmpegService.fFprobe = new FFprobe(System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffprobe");
-            FFmpeg ffmpeg = new FFmpeg(System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffmpeg");
-            ffmpegService.executor = new FFmpegExecutor(ffmpeg, ffmpegService.fFprobe);
-
-            Path out = ffmpegService.doConversion(Paths.get("/home/ashraf/ffmpeg/bin/a.mkv"), new IndexImpl("5bfd3df1ad8ce6617f9bf635", "1280X720", Status.BINDING));
-            System.out.println(out);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
     }
 }
