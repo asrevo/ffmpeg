@@ -1,5 +1,6 @@
 package org.revo.Service.Impl;
 
+import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
@@ -28,6 +29,7 @@ import static org.revo.Domain.IndexImpl.list;
 import static org.revo.Domain.Resolution.getLess;
 
 @Service
+@Slf4j
 public class FfmpegServiceImpl implements FfmpegService {
     @Autowired
     private S3Service s3Service;
@@ -44,6 +46,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master convert(Master payload) throws IOException {
         Path source = s3Service.pull(payload.getId());
+        log.info(source.toFile().toString()+ "        "+source.toFile().length()+"        "+source.toFile().getFreeSpace()+"         ");
         Path converted = doConversion(source, payload.getImpls().get(0));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
         converted.toFile().delete();
