@@ -64,7 +64,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     }
 
     private Master info(FFmpegProbeResult probe, Master master) {
-        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).map(it -> it.width + "X" + it.height).collect(Collectors.joining()));
+        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).map(it -> ((it.width / 2) * 2) + "X" + ((it.height / 2) * 2)).collect(Collectors.joining()));
         master.setTime(probe.getFormat().duration);
         master.setFormat(probe.getFormat().format_long_name);
         master.setStream("#EXTM3U\n#EXT-X-VERSION:4\n# Media Playlists\n");
