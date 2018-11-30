@@ -46,9 +46,10 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master convert(Master payload) throws IOException {
         Path source = s3Service.pull(payload.getId());
-        log.info(source.toFile().toString()+ "        "+source.toFile().length()+"        "+source.toFile().getFreeSpace()+"         ");
+        log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
         Path converted = doConversion(source, payload.getImpls().get(0));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
+        log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
         converted.toFile().delete();
         source.toFile().delete();
         return payload;
