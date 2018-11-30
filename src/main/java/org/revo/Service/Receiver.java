@@ -26,6 +26,8 @@ public class Receiver {
     @Autowired
     private FfmpegService ffmpegService;
     @Autowired
+    private TempFileService tempFileService;
+    @Autowired
     private Processor processor;
     @Value("${spring.cloud.stream.rabbit.bindings.ffmpeg_converter_pop.consumer.max-priority}")
     private Integer maxPriority;
@@ -33,6 +35,7 @@ public class Receiver {
     @StreamListener(value = Processor.ffmpeg_converter_pop)
     @SendTo(value = Processor.bento4_hls)
     public Master convert(Message<Master> master) throws IOException {
+        tempFileService.clear("converter");
         log.info("receive ffmpeg_converter_pop " + master.getPayload().getId());
         Master convert = ffmpegService.convert(master.getPayload());
         log.info("send bento4_hls " + convert.getId());
@@ -42,6 +45,7 @@ public class Receiver {
     @StreamListener(value = Processor.ffmpeg_queue)
     @SendTo(value = Processor.tube_info)
     public Master queue(Message<Master> master) throws IOException {
+        tempFileService.clear("queue");
         log.info("receive ffmpeg_queue " + master.getPayload().getId());
         Master queue = ffmpegService.queue(master.getPayload());
         List<IndexImpl> impls = queue.getImpls();

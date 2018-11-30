@@ -9,7 +9,7 @@ import java.nio.file.Path;
  */
 public interface S3Service {
 
-    Path pull(String key) throws IOException;
+    Path pull(String fun, String key) throws IOException;
 
     void pushMedia(String key, File file);
 

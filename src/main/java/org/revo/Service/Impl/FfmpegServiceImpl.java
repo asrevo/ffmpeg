@@ -13,12 +13,12 @@ import org.revo.Domain.Status;
 import org.revo.Service.FfmpegService;
 import org.revo.Service.S3Service;
 import org.revo.Service.SignedUrlService;
+import org.revo.Service.TempFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
@@ -39,25 +39,25 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Autowired
     private SignedUrlService signedUrlService;
     @Autowired
+    private TempFileService tempFileService;
+    @Autowired
     private Env env;
 
 
     @Override
     public Master convert(Master payload) throws IOException {
-        Path source = s3Service.pull(payload.getId());
+        Path source = s3Service.pull("convert", payload.getId());
         log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
         Path converted = doConversion(source, payload.getImpls().get(0));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
         log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
-        converted.toFile().delete();
-        source.toFile().delete();
         return payload;
     }
 
     @Override
     public Master queue(Master master) throws IOException {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
-        File image = image(probe);
+        File image = image(probe, master.getId());
         s3Service.pushImage(master.getId() + ".png", image);
         image.delete();
         return info(probe, master);
@@ -75,8 +75,8 @@ public class FfmpegServiceImpl implements FfmpegService {
         return master;
     }
 
-    private File image(FFmpegProbeResult probe) throws IOException {
-        Path thumbnail = Files.createTempFile("thumbnail", ".png");
+    private File image(FFmpegProbeResult probe, String id) throws IOException {
+        Path thumbnail = tempFileService.tempFile("image", id + ".png");
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(probe)
                 .addOutput(thumbnail.toString())
