@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.revo.Domain.IndexImpl.list;
@@ -89,7 +90,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     }
 
     private Path doConversion(Path in, IndexImpl index) throws IOException {
-        Path out = in.getParent().resolve(index.getIndex());
+        Path out = in.getParent().resolve(index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
         Integer width = Integer.valueOf(index.getResolution().split("X")[0]);
         Integer height = Integer.valueOf(index.getResolution().split("X")[1]);
         FFmpegBuilder builder = new FFmpegBuilder()
