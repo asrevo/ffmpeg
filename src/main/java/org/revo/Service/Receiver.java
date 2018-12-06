@@ -53,7 +53,7 @@ public class Receiver {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
             log.info("send bento4_hls " + queue.getId());
             processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());
-            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - impls.size()).build());
+            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
         } else {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
             log.info("send ffmpeg_converter_push " + queue.getId());
