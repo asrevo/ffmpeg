@@ -6,8 +6,8 @@ before_install:
 install: true
 services:
 - docker
-script: ./mvnw clean install -Pbuild-resource -DskipTests=true -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
-#script: ./mvnw clean install docker:build docker:push -Pbuild-resource -DskipTests=true -Ddocker.username=$docker_username -Ddocker.password=$docker_password -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
+#script: ./mvnw clean install -Pbuild-resource -DskipTests=true -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
+script: ./mvnw clean install docker:build docker:push -Pbuild-resource -DskipTests=true -Ddocker.username=$docker_username -Ddocker.password=$docker_password -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
 cache:
  directories:
  - $HOME/.m2
