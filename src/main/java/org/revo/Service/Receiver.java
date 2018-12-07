@@ -49,7 +49,7 @@ public class Receiver {
         log.info("receive ffmpeg_queue " + master.getPayload().getId());
         Master queue = ffmpegService.queue(master.getPayload());
         List<IndexImpl> impls = queue.getImpls();
-        if (queue.getFormat().equalsIgnoreCase("QuickTime / MOV")) {
+        if (queue.isMp4()) {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
             log.info("send bento4_hls " + queue.getId());
             processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());

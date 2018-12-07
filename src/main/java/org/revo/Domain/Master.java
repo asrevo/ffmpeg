@@ -12,7 +12,7 @@ public class Master extends Base {
     private String stream;
     private String secret;
     private String file;
-    private String format;
+    private boolean mp4;
     private List<IndexImpl> impls;
     private double time;
     private String resolution;

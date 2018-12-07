@@ -1,7 +1,6 @@
 package org.revo.Service.Impl;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -70,7 +68,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     private Master info(FFmpegProbeResult probe, Master master) {
         master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).map(it -> ((it.width / 2) * 2) + "X" + ((it.height / 2) * 2)).collect(Collectors.joining()));
         master.setTime(probe.getFormat().duration);
-        master.setFormat(probe.getFormat().format_long_name);
+        master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
         master.setStream("#EXTM3U\n#EXT-X-VERSION:4\n# Media Playlists\n");
         master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
         List<IndexImpl> list = list(getLess(master.getResolution()));
