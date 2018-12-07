@@ -1,6 +1,7 @@
 package org.revo.Service.Impl;
 
 import lombok.extern.slf4j.Slf4j;
+import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -97,7 +99,7 @@ public class FfmpegServiceImpl implements FfmpegService {
                 .setInput(fFprobe.probe(in.toString()))
                 .addOutput(out.toString())
                 .setFormat("mp4")
-//                .setVideoFilter("drawtext=\"text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\"")
+                .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
                 .setVideoResolution(width, height)
                 .done();
         executor.createJob(builder).run();

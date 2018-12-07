@@ -53,6 +53,7 @@ public class Receiver {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
             log.info("send bento4_hls " + queue.getId());
             processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());
+            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
         } else {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
             log.info("send ffmpeg_converter_push " + queue.getId());
@@ -62,9 +63,6 @@ public class Receiver {
             queue.setImpls(Collections.singletonList(impls.get(i + 1)));
             log.info("send ffmpeg_converter_push " + queue.getId());
             processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
-        }
-        if (queue.isMp4()) {
-            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
         }
         log.info("send tube_info " + queue.getId());
         queue.setImpls(impls);
