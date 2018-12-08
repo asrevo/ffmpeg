@@ -22,9 +22,11 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparingInt;
 import static org.revo.Domain.IndexImpl.list;
@@ -97,7 +99,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         return thumbnail.toFile();
     }
 
-    private synchronized Path doConversion(Path in, IndexImpl index) throws IOException {
+    private Path doConversion(Path in, IndexImpl index) throws IOException {
         Path out = in.getParent().resolve(index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
         String[] split = index.getResolution().split("X");
         Integer width = Integer.valueOf(split[0]);
@@ -110,7 +112,20 @@ public class FfmpegServiceImpl implements FfmpegService {
                 .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
                 .setVideoResolution(width, height)
                 .done();
-        executor.createJob(builder).run();
+        execute(builder);
         return out;
+    }
+
+    private void execute(FFmpegBuilder builder) {
+        List<String> build = new ArrayList<>(builder.build()).stream().skip(3).collect(Collectors.toList());
+        build.add(0, System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffmpeg");
+        System.out.println(build.stream().collect(Collectors.joining(" ")));
+        try {
+            Process start = new ProcessBuilder(build).start();
+            int i = start.waitFor();
+            System.out.println(i);
+        } catch (IOException | InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
