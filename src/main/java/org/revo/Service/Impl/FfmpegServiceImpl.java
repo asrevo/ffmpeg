@@ -119,13 +119,12 @@ public class FfmpegServiceImpl implements FfmpegService {
     private void execute(FFmpegBuilder builder) {
         List<String> build = new ArrayList<>(builder.build()).stream().skip(3).collect(Collectors.toList());
         build.add(0, System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffmpeg");
-        System.out.println(build.stream().collect(Collectors.joining(" ")));
         try {
             Process start = new ProcessBuilder(build).start();
             int i = start.waitFor();
             System.out.println(i);
         } catch (IOException | InterruptedException e) {
-            System.out.println(e.getMessage());
+            log.info(e.getMessage());
         }
     }
 }
