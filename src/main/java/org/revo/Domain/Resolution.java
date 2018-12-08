@@ -8,26 +8,30 @@ import java.util.stream.Collectors;
 
 @Getter
 public enum Resolution {
-    R4320("7680X4320", 4320),
-    R2160("3840X2160", 2160),
-    R1440("2560X1440", 1440),
-    R1080("1920X1080", 1080),
-    R720("1280X720", 720),
-    R480("854X480", 480),
-    R360("640X360", 360),
-    R240("426X240", 240),
-    R144("256X144", 144);
+    R4320("7680X4320", 7680, 4320),
+    R2160("3840X2160", 3840, 2160),
+    R1440("2560X1440", 2560, 1440),
+    R1080("1920X1080", 1920, 1080),
+    R720("1280X720", 1280, 720),
+    R480("854X480", 854, 480),
+    R360("640X360", 640, 360),
+    R240("426X240", 426, 240),
+    R144("256X144", 256, 144);
 
-    Resolution(String resolution, int value) {
+    Resolution(String resolution, int width, int height) {
         this.resolution = resolution;
-        this.value = value;
+        this.width = width;
+        this.height = height;
     }
 
     private String resolution;
-    private int value;
+    private int width;
+    private int height;
 
     public static List<Resolution> getLess(String resolution) {
-        Integer v = Integer.valueOf(resolution.split("X")[1]);
-        return Arrays.asList(Resolution.values()).stream().filter(it -> it.getValue() < v).collect(Collectors.toList());
+        String[] split = resolution.split("X");
+        Integer width = Integer.valueOf(split[0]);
+        Integer height = Integer.valueOf(split[1]);
+        return Arrays.asList(Resolution.values()).stream().filter(it -> it.getWidth() < width && it.getHeight() < height).collect(Collectors.toList());
     }
 }

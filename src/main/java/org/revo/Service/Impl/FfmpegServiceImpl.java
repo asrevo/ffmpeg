@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,10 +54,14 @@ public class FfmpegServiceImpl implements FfmpegService {
         Path source = s3Service.pull("convert", payload.getId());
         log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
         long start = System.currentTimeMillis();
-        Path converted = doConversion(source, payload.getImpls().get(0));
-        log.info("take " + source.toFile().toString() + " " + (System.currentTimeMillis() - start));
-        s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
+        IndexImpl index = payload.getImpls().get(0);
+        Path converted = doConversion(source, index);
+        long execution = System.currentTimeMillis() - start;
+        log.info("take " + source.toFile().toString() + " " + execution);
+        index.setExecution(execution);
+        s3Service.pushMedia(index.getIndex(), converted.toFile());
         log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
+        payload.setImpls(Collections.singletonList(index));
         return payload;
     }
 
@@ -76,7 +81,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         master.setStream("#EXTM3U\n#EXT-X-VERSION:4\n# Media Playlists\n");
         master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
         List<IndexImpl> list = list(getLess(master.getResolution()));
-        list.add(0, new IndexImpl(master.getId(), master.getResolution(), Status.BINDING));
+        list.add(0, new IndexImpl(master.getId(), master.getResolution(), Status.BINDING, 0));
         master.setImpls(list);
         return master;
     }
