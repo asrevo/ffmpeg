@@ -8,15 +8,15 @@ import java.util.stream.Collectors;
 
 @Getter
 public enum Resolution {
-    R4320("7680X4320", 7680, 4320),
-    R2160("3840X2160", 3840, 2160),
-    R1440("2560X1440", 2560, 1440),
-    R1080("1920X1080", 1920, 1080),
-    R720("1280X720", 1280, 720),
-    R480("854X480", 854, 480),
-    R360("640X360", 640, 360),
-    R240("426X240", 426, 240),
-    R144("256X144", 256, 144);
+    R4320("7680x4320", 7680, 4320),
+    R2160("3840x2160", 3840, 2160),
+    R1440("2560x1440", 2560, 1440),
+    R1080("1920x1080", 1920, 1080),
+    R720("1280x720", 1280, 720),
+    R480("854x480", 854, 480),
+    R360("640x360", 640, 360),
+    R240("426x240", 426, 240),
+    R144("256x144", 256, 144);
 
     Resolution(String resolution, int width, int height) {
         this.resolution = resolution;
@@ -33,7 +33,7 @@ public enum Resolution {
     }
 
     private static double getValue(String resolution) {
-        String[] split = resolution.split("X");
+        String[] split = resolution.split("x");
         return Math.pow(Math.pow(Integer.valueOf(split[0]), 2) + Math.pow(Integer.valueOf(split[1]), 2), .5);
     }
 }

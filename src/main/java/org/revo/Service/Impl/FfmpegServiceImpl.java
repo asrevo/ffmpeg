@@ -94,7 +94,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     private Path doConversion(Path in, IndexImpl index) throws IOException {
         Path out = in.getParent().resolve(index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
-        String[] split = index.getResolution().split("X");
+        String[] split = index.getResolution().split("x");
         Integer width = Integer.valueOf(split[0]);
         Integer height = Integer.valueOf(split[1]);
         FFmpegBuilder builder = new FFmpegBuilder()
