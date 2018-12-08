@@ -73,7 +73,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     private Master info(FFmpegProbeResult probe, Master master) {
         master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).max(comparingInt(o -> o.height * o.width)).
-                map(it -> ((it.width / 2) * 2) + "X" + ((it.height / 2) * 2)).orElse(""));
+                map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
         master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
