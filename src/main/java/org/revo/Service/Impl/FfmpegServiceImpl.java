@@ -97,7 +97,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         return thumbnail.toFile();
     }
 
-    private Path doConversion(Path in, IndexImpl index) throws IOException {
+    private synchronized Path doConversion(Path in, IndexImpl index) throws IOException {
         Path out = in.getParent().resolve(index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
         String[] split = index.getResolution().split("X");
         Integer width = Integer.valueOf(split[0]);
