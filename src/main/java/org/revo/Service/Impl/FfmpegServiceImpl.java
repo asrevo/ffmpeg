@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import static java.util.Comparator.comparingInt;
 import static org.revo.Domain.IndexImpl.list;
 import static org.revo.Domain.Resolution.getLess;
 
@@ -54,7 +54,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
         long start = System.currentTimeMillis();
         Path converted = doConversion(source, payload.getImpls().get(0));
-        log.info("take " + source.toFile().toString() +" "+ (System.currentTimeMillis() - start));
+        log.info("take " + source.toFile().toString() + " " + (System.currentTimeMillis() - start));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
         log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
         return payload;
@@ -69,7 +69,8 @@ public class FfmpegServiceImpl implements FfmpegService {
     }
 
     private Master info(FFmpegProbeResult probe, Master master) {
-        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).map(it -> ((it.width / 2) * 2) + "X" + ((it.height / 2) * 2)).collect(Collectors.joining()));
+        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).max(comparingInt(o -> o.height * o.width)).
+                map(it -> ((it.width / 2) * 2) + "X" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
         master.setStream("#EXTM3U\n#EXT-X-VERSION:4\n# Media Playlists\n");

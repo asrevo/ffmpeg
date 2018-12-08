@@ -14,6 +14,9 @@ public class IndexImpl {
     private String resolution;
     private Status status;
 
+    public IndexImpl() {
+    }
+
     public IndexImpl(String index, String resolution, Status status) {
         this.index = index;
         this.resolution = resolution;
