@@ -50,6 +50,8 @@ public class Receiver {
             tempFileService.clear("queue");
             log.info("receive ffmpeg_queue " + master.getPayload().getId());
             Master queue = ffmpegService.queue(master.getPayload());
+            log.info("send tube_info " + queue.getId());
+            processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             List<IndexImpl> impls = queue.getImpls();
             if (queue.isMp4()) {
                 queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
@@ -66,9 +68,6 @@ public class Receiver {
                 log.info("send ffmpeg_converter_push " + queue.getId());
                 processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
             }
-            log.info("send tube_info " + queue.getId());
-            queue.setImpls(impls);
-            processor.tube_info().send(MessageBuilder.withPayload(queue).build());
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
         }
