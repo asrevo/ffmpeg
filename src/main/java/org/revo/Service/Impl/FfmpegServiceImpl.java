@@ -1,7 +1,6 @@
 package org.revo.Service.Impl;
 
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -54,7 +52,9 @@ public class FfmpegServiceImpl implements FfmpegService {
     public Master convert(Master payload) throws IOException {
         Path source = s3Service.pull("convert", payload.getId());
         log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
+        long start = System.currentTimeMillis();
         Path converted = doConversion(source, payload.getImpls().get(0));
+        System.out.println("take " + source.toFile().toString() + (System.currentTimeMillis() - start));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
         log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
         return payload;
