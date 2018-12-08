@@ -111,7 +111,7 @@ public class FfmpegServiceImpl implements FfmpegService {
                 .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
                 .setVideoResolution(width, height)
                 .done();
-        FFmpegJob job = executor.createJob(builder);
+        FFmpegJob job = executor.createJob(builder, progress -> log.info(progress.status.toString()));
         job.run();
         log.info("job " + job.getState());
         return out;
