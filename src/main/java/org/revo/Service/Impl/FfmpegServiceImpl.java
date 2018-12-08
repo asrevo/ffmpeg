@@ -78,7 +78,6 @@ public class FfmpegServiceImpl implements FfmpegService {
                 map(it -> ((it.width / 2) * 2) + "X" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
-        master.setStream("#EXTM3U\n#EXT-X-VERSION:4\n# Media Playlists\n");
         master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
         List<IndexImpl> list = list(getLess(master.getResolution()));
         list.add(0, new IndexImpl(master.getId(), master.getResolution(), Status.BINDING, 0));

@@ -9,7 +9,6 @@ import java.util.List;
 @Setter
 public class Master extends Base {
     private String image;
-    private String stream;
     private String secret;
     private String file;
     private boolean mp4;
