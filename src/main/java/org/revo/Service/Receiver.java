@@ -51,12 +51,12 @@ public class Receiver {
         List<IndexImpl> impls = queue.getImpls();
         if (queue.isMp4()) {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-            log.info("send bento4_hls " + queue.getId());
+            log.info("send bento4_hls " + queue.getId() + "  " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
             processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());
             processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
         } else {
             queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-            log.info("send ffmpeg_converter_push " + queue.getId());
+            log.info("send ffmpeg_converter_push " + queue.getId() + " " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
             processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority).build());
         }
         for (int i = 0; i < impls.stream().skip(1).collect(Collectors.toList()).size(); i++) {
