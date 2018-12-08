@@ -97,7 +97,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         Integer width = Integer.valueOf(split[0]);
         Integer height = Integer.valueOf(split[1]);
         FFmpegBuilder builder = new FFmpegBuilder()
-                .setVerbosity(Verbosity.INFO)
+                .setVerbosity(Verbosity.DEBUG)
                 .setInput(fFprobe.probe(in.toString()))
                 .addOutput(out.toString())
                 .setFormat("mp4")
