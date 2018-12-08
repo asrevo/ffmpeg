@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
-import net.bramp.ffmpeg.builder.FFmpegBuilder.Verbosity;
 import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
@@ -104,14 +103,13 @@ public class FfmpegServiceImpl implements FfmpegService {
         Integer width = Integer.valueOf(split[0]);
         Integer height = Integer.valueOf(split[1]);
         FFmpegBuilder builder = new FFmpegBuilder()
-                .setVerbosity(Verbosity.DEBUG)
                 .setInput(fFprobe.probe(in.toString()))
                 .addOutput(out.toString())
                 .setFormat("mp4")
-                .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=26 : fontcolor=white: x=((w/20)): y=((h/20))\'")
+                .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
                 .setVideoResolution(width, height)
                 .done();
-        FFmpegJob job = executor.createJob(builder, progress -> log.info(progress.status.toString()));
+        FFmpegJob job = executor.createJob(builder, progress -> log.info(index.getIndex() + " " + index.getResolution() + " " + progress.status.toString()));
         job.run();
         log.info("job " + job.getState());
         return out;
