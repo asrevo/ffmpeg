@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.integration.annotation.MessageEndpoint;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.support.MessageBuilder;
 
 import java.io.IOException;
@@ -33,39 +32,45 @@ public class Receiver {
     private Integer maxPriority;
 
     @StreamListener(value = Processor.ffmpeg_converter_pop)
-    @SendTo(value = Processor.bento4_hls)
-    public Master convert(Message<Master> master) throws IOException {
-        tempFileService.clear("convert");
-        log.info("receive ffmpeg_converter_pop " + master.getPayload().getId() + " and " + master.getPayload().getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-        Master convert = ffmpegService.convert(master.getPayload());
-        log.info("send bento4_hls " + convert.getId());
-        return convert;
+    public void convert(Message<Master> master) {
+        try {
+            tempFileService.clear("convert");
+            log.info("receive ffmpeg_converter_pop " + master.getPayload().getId() + " and " + master.getPayload().getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
+            Master convert = ffmpegService.convert(master.getPayload());
+            log.info("send bento4_hls " + convert.getId());
+            processor.bento4_hls().send(MessageBuilder.withPayload(convert).build());
+        } catch (IOException e) {
+            log.info("convert error " + e.getMessage());
+        }
     }
 
     @StreamListener(value = Processor.ffmpeg_queue)
-    @SendTo(value = Processor.tube_info)
-    public Master queue(Message<Master> master) throws IOException {
-        tempFileService.clear("queue");
-        log.info("receive ffmpeg_queue " + master.getPayload().getId());
-        Master queue = ffmpegService.queue(master.getPayload());
-        List<IndexImpl> impls = queue.getImpls();
-        if (queue.isMp4()) {
-            queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-            log.info("send bento4_hls " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-            processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());
-            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
-        } else {
-            queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-            log.info("send ffmpeg_converter_push " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority).build());
+    public void queue(Message<Master> master) {
+        try {
+            tempFileService.clear("queue");
+            log.info("receive ffmpeg_queue " + master.getPayload().getId());
+            Master queue = ffmpegService.queue(master.getPayload());
+            List<IndexImpl> impls = queue.getImpls();
+            if (queue.isMp4()) {
+                queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
+                log.info("send bento4_hls " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
+                processor.bento4_hls().send(MessageBuilder.withPayload(queue).build());
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
+            } else {
+                queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
+                log.info("send ffmpeg_converter_push " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority).build());
+            }
+            for (int i = 0; i < impls.stream().skip(1).collect(Collectors.toList()).size(); i++) {
+                queue.setImpls(Collections.singletonList(impls.get(i + 1)));
+                log.info("send ffmpeg_converter_push " + queue.getId());
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
+            }
+            log.info("send tube_info " + queue.getId());
+            queue.setImpls(impls);
+            processor.tube_info().send(MessageBuilder.withPayload(queue).build());
+        } catch (IOException e) {
+            log.info("queue error " + e.getMessage());
         }
-        for (int i = 0; i < impls.stream().skip(1).collect(Collectors.toList()).size(); i++) {
-            queue.setImpls(Collections.singletonList(impls.get(i + 1)));
-            log.info("send ffmpeg_converter_push " + queue.getId());
-            processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
-        }
-        log.info("send tube_info " + queue.getId());
-        queue.setImpls(impls);
-        return queue;
     }
 }
