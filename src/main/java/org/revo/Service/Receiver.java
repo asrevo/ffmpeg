@@ -34,7 +34,7 @@ public class Receiver {
     @StreamListener(value = Processor.ffmpeg_converter_pop)
     public void convert(Message<Master> master) {
         try {
-//            tempFileService.clear("convert");
+            tempFileService.clear("convert");
             log.info("receive ffmpeg_converter_pop " + master.getPayload().getId() + " and " + master.getPayload().getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
             Master convert = ffmpegService.convert(master.getPayload());
             log.info("send bento4_hls " + convert.getId());
