@@ -10,7 +10,6 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.revo.Config.Env;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
-import org.revo.Domain.Status;
 import org.revo.Service.FfmpegService;
 import org.revo.Service.S3Service;
 import org.revo.Service.SignedUrlService;
@@ -23,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static java.util.Comparator.comparingInt;
@@ -79,9 +77,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
         master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
-        List<IndexImpl> list = list(getLess(master.getResolution()));
-        list.add(0, new IndexImpl(master.getId(), master.getResolution(), Status.BINDING, 0));
-        master.setImpls(list);
+        master.setImpls(list(getLess(master.getResolution())));
         return master;
     }
 

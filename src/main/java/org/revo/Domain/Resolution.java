@@ -29,9 +29,11 @@ public enum Resolution {
     private int height;
 
     public static List<Resolution> getLess(String resolution) {
+        return Arrays.asList(Resolution.values()).stream().filter(it -> getValue(resolution) - getValue(it.resolution) >= 0).collect(Collectors.toList());
+    }
+
+    private static double getValue(String resolution) {
         String[] split = resolution.split("X");
-        Integer width = Integer.valueOf(split[0]);
-        Integer height = Integer.valueOf(split[1]);
-        return Arrays.asList(Resolution.values()).stream().filter(it -> it.getWidth() < width && it.getHeight() < height).collect(Collectors.toList());
+        return Math.pow(Math.pow(Integer.valueOf(split[0]), 2) + Math.pow(Integer.valueOf(split[1]), 2), .5);
     }
 }
