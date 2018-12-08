@@ -54,7 +54,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
         long start = System.currentTimeMillis();
         Path converted = doConversion(source, payload.getImpls().get(0));
-        log.info("take " + source.toFile().toString() + (System.currentTimeMillis() - start));
+        log.info("take " + source.toFile().toString() +" "+ (System.currentTimeMillis() - start));
         s3Service.pushMedia(payload.getImpls().get(0).getIndex(), converted.toFile());
         log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
         return payload;
