@@ -5,6 +5,7 @@ import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.builder.FFmpegBuilder.Verbosity;
+import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.revo.Config.Env;
@@ -110,7 +111,9 @@ public class FfmpegServiceImpl implements FfmpegService {
                 .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
                 .setVideoResolution(width, height)
                 .done();
-        executor.createJob(builder).run();
+        FFmpegJob job = executor.createJob(builder);
+        job.run();
+        log.info("job " + job.getState());
         return out;
     }
 }
