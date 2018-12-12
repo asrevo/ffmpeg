@@ -6,8 +6,8 @@ before_install:
 install: true
 services:
 - docker
-#script: ./mvnw clean install -Pbuild-resource -DskipTests=true -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
-script: ./mvnw clean install docker:build docker:push -Pbuild-resource -DskipTests=true -Ddocker.username=$docker_username -Ddocker.password=$docker_password -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
+script: ./mvnw clean install -Pbuild-resource -DskipTests=true -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
+#script: ./mvnw clean install docker:build docker:push -Pbuild-resource -DskipTests=true -Ddocker.username=$docker_username -Ddocker.password=$docker_password -Dorg.revo.env.buckets.static.domainname=$cloudfront_domainname
 cache:
  directories:
  - $HOME/.m2
@@ -19,13 +19,13 @@ after_success:
 - git add -f src/main/resources/static/
 - git commit -m "push $repo"
 deploy:
-- provider: s3
-  access_key_id: $access_key_id
-  secret_access_key: $secret_access_key
-  bucket: $s3_bucket_name
-  region: us-east-1
-  upload-dir: $repo
-  acl: public_read
+#- provider: s3
+#  access_key_id: $access_key_id
+#  secret_access_key: $secret_access_key
+#  bucket: $s3_bucket_name
+#  region: us-east-1
+#  upload-dir: $repo
+#  acl: public_read
 - provider: cloudfoundry
   username: $cloudfoundry_username
   password: $cloudfoundry_password
