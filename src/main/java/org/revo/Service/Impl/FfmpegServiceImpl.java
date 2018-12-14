@@ -73,13 +73,13 @@ public class FfmpegServiceImpl implements FfmpegService {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         for (Path png : image(probe, master.getId(), "png")) {
             File file = png.toFile();
-//            s3Service.pushImage(png.getFileName().toString(), file);
-//            file.delete();
+            s3Service.pushImage(png.getFileName().toString(), file);
+            file.delete();
         }
         for (Path png : image(probe, master.getId(), "webp")) {
             File file = png.toFile();
-//            s3Service.pushImage(png.getFileName().toString(), file);
-//            file.delete();
+            s3Service.pushImage(png.getFileName().toString(), file);
+            file.delete();
         }
         return info(probe, master);
     }
