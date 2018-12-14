@@ -73,13 +73,13 @@ public class FfmpegServiceImpl implements FfmpegService {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         for (Path png : image(probe, master.getId(), "png")) {
             File file = png.toFile();
-            s3Service.pushImage(png.getFileName().toString(), file);
-            file.delete();
+//            s3Service.pushImage(png.getFileName().toString(), file);
+//            file.delete();
         }
         for (Path png : image(probe, master.getId(), "webp")) {
             File file = png.toFile();
-            s3Service.pushImage(png.getFileName().toString(), file);
-            file.delete();
+//            s3Service.pushImage(png.getFileName().toString(), file);
+//            file.delete();
         }
         return info(probe, master);
     }
@@ -111,7 +111,7 @@ public class FfmpegServiceImpl implements FfmpegService {
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
-        return Files.walk(thumbnail).filter(it -> Files.isRegularFile(it)).collect(Collectors.toList());
+        return Files.walk(thumbnail.getParent()).filter(it -> Files.isRegularFile(it)).collect(Collectors.toList());
     }
 
     private static String format(long millis) {
