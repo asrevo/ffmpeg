@@ -68,7 +68,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     public Master queue(Master master) throws IOException {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         File image = image(probe, master.getId());
-        s3Service.pushImage(master.getId() + ".png", image);
+        s3Service.pushImage(master.getId() + ".webp", image);
         log.info("image " + image.toString());
         return info(probe, master);
     }
