@@ -101,7 +101,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Index hls(Master master) throws IOException {
-        Path converted = ddoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId())), master);
+        Path converted = ddoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getImpls().get(0).getIndex())), master);
         Index index = new Index();
         index.setMaster(master.getId());
         index.setId(master.getImpls().get(0).getIndex());
