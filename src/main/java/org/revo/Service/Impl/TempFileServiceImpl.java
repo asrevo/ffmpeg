@@ -16,7 +16,7 @@ public class TempFileServiceImpl implements TempFileService {
     private String project;
     private Path start = Paths.get(System.getProperty("java.io.tmpdir"), "asrevo");
 
-    private Path mkdir(Path path) {
+    public Path mkdir(Path path) {
         if (!path.toFile().exists()) {
             path.toFile().mkdir();
         }

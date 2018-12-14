@@ -47,4 +47,27 @@ public class S3ServiceImpl implements S3Service {
     public void deleteMedia(String key) {
         this.amazonS3Client.deleteObject(env.getBuckets().get("video").toString(), key);
     }
+
+    @Override
+    public void push(Path base, Path parent) {
+        try {
+            Files.walk(parent)
+                    .filter(Files::isRegularFile)
+                    .filter(it -> it.getFileName().toString().endsWith("ts"))
+                    .forEach(it -> {
+                        String key = it.toString().substring(base.toString().length() + 1);
+                        saveTs(it, key);
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public void saveTs(Path path, String key) {
+        this.amazonS3Client.putObject(env.getBuckets().get("ts").toString(), key, path.toFile());
+    }
+
+
 }

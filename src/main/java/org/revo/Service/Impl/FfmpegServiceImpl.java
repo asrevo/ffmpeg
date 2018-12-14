@@ -1,5 +1,7 @@
 package org.revo.Service.Impl;
 
+import com.comcast.viper.hlsparserj.PlaylistVersion;
+import com.comcast.viper.hlsparserj.tags.UnparsedTag;
 import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
@@ -9,6 +11,7 @@ import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.revo.Config.Env;
+import org.revo.Domain.Index;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
 import org.revo.Service.FfmpegService;
@@ -25,13 +28,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.comcast.viper.hlsparserj.PlaylistFactory.parsePlaylist;
 import static java.util.Comparator.comparingInt;
 import static org.revo.Domain.IndexImpl.list;
 import static org.revo.Domain.Resolution.getLess;
+import static org.revo.Util.FileUtils.read;
 
 @Service
 @Slf4j
@@ -66,6 +72,57 @@ public class FfmpegServiceImpl implements FfmpegService {
         log.info("converted " + converted.toFile().toString() + "        " + converted.toFile().length() + "        " + converted.toFile().getFreeSpace() + "         ");
         payload.setImpls(Collections.singletonList(index));
         return payload;
+    }
+
+    private Path ddoConversion(FFmpegProbeResult probe, Master master) {
+        Path out = tempFileService.tempFile("hls", master.getId() + File.separator + master.getImpls().get(0).getIndex() + File.separator + "index.m3u8");
+        tempFileService.mkdir(out.getParent().getParent());
+        tempFileService.mkdir(out.getParent());
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(probe)
+                .addOutput(out.toString())
+                .setFormat("m3u8")
+                .addExtraArgs("-f", "hls")
+                .addExtraArgs("-codec:", "copy")
+                .addExtraArgs("-start_number", "0")
+                .addExtraArgs("-hls_time", "10")
+                .addExtraArgs("-hls_list_size", "0")
+                .addExtraArgs("-hls_enc", "1")
+                .addExtraArgs("-hls_enc_key", master.getSecret())
+                .addExtraArgs("-hls_enc_key_url", master.getId() + ".key\\")
+                .addExtraArgs("-hls_enc_iv", UUID.randomUUID().toString().replace("-", ""))
+                .addExtraArgs("-master_pl_name", master.getId() + ".m3u8")
+                .done();
+        FFmpegJob job = executor.createJob(builder);
+        job.run();
+        log.info("job " + job.getState());
+        return out;
+    }
+
+    @Override
+    public Index hls(Master master) throws IOException {
+        Path converted = ddoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId())), master);
+        Index index = new Index();
+        index.setMaster(master.getId());
+        index.setId(master.getImpls().get(0).getIndex());
+        index.setExecution(master.getImpls().get(0).getExecution());
+        Optional<UnparsedTag> masterTag = getMasterTag(converted.getParent().resolve(master.getId() + ".m3u8"));
+        masterTag.ifPresent(it -> {
+            index.setStream(read(converted));
+            index.setAverage_bandwidth(it.getAttributes().get("AVERAGE-BANDWIDTH"));
+            index.setBandwidth(it.getAttributes().get("BANDWIDTH"));
+            index.setCodecs(it.getAttributes().get("CODECS"));
+            index.setResolution(it.getAttributes().get("RESOLUTION"));
+        });
+        Path base = converted.getParent().getParent().getParent().getParent();
+        s3Service.push(base, converted.getParent().getParent());
+        return index;
+    }
+
+    private Optional<UnparsedTag> getMasterTag(Path path) {
+        return parsePlaylist(PlaylistVersion.TWELVE, read(path)).getTags().stream()
+                .filter(it -> it.getTagName().equalsIgnoreCase("EXT-X-STREAM-INF"))
+                .findAny();
     }
 
     @Override

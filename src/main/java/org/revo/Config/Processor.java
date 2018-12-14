@@ -11,6 +11,11 @@ public interface Processor {
     @Input("ffmpeg_queue")
     SubscribableChannel ffmpeg_queue();
 
+    String ffmpeg_hls_pop = "ffmpeg_hls_pop";
+
+    @Input("ffmpeg_hls_pop")
+    SubscribableChannel ffmpeg_hls_pop();
+
     String ffmpeg_converter_pop = "ffmpeg_converter_pop";
 
     @Input("ffmpeg_converter_pop")
@@ -21,15 +26,20 @@ public interface Processor {
     @Output("ffmpeg_converter_push")
     MessageChannel ffmpeg_converter_push();
 
-    String bento4_hls = "bento4_hls";
+    String ffmpeg_hls_push = "ffmpeg_hls_push";
 
-    @Output("bento4_hls")
-    MessageChannel bento4_hls();
+    @Output("ffmpeg_hls_push")
+    MessageChannel ffmpeg_hls_push();
 
     String tube_info = "tube_info";
 
     @Output("tube_info")
     MessageChannel tube_info();
+
+    String tube_hls = "tube_hls";
+
+    @Output("tube_hls")
+    MessageChannel tube_hls();
 
     String feedback_queue = "feedback_queue";
 

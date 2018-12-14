@@ -16,4 +16,9 @@ public interface S3Service {
     void pushImage(String key, File file);
 
     void deleteMedia(String key);
+
+    void push(Path base, Path parent);
+
+    void saveTs(Path path, String key);
+
 }
