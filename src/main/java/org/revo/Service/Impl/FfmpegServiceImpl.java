@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
+import net.bramp.ffmpeg.builder.FFmpegOutputBuilder;
 import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
@@ -67,9 +68,8 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master queue(Master master) throws IOException {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
-        File image = image(probe, master.getId());
-        s3Service.pushImage(master.getId() + ".webp", image);
-        log.info("image " + image.toString());
+        s3Service.pushImage(master.getId() + ".webp", image(probe, master.getId(), "webp"));
+        s3Service.pushImage(master.getId() + ".png", image(probe, master.getId(), "png"));
         return info(probe, master);
     }
 
@@ -78,23 +78,29 @@ public class FfmpegServiceImpl implements FfmpegService {
                 map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
-        master.setImage(signedUrlService.getUrl(master.getId() + ".webp", "thumb"));
+        master.setImage(signedUrlService.getUrl(master.getId(), "thumb"));
         master.setImpls(list(getLess(master.getResolution())));
         return master;
     }
 
-    private File image(FFmpegProbeResult probe, String id) throws IOException {
-        Path thumbnail = tempFileService.tempFile("queue", id + ".webp");
-        probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).forEach(it -> {
-            long millis = ((long) it.duration) * 1000;
-            FFmpegBuilder builder = new FFmpegBuilder()
-                    .setInput(probe)
-                    .addOutput(thumbnail.toString())
-                    .addExtraArgs("-ss", format(millis / 2))
-                    .addExtraArgs("-t", format(3 * 1000))
-                    .setVideoFilter("select='gte(n\\,10)',scale=320:-1").done();
-            executor.createJob(builder).run();
-        });
+    private File image(FFmpegProbeResult probe, String id, String type) throws IOException {
+        Path thumbnail = tempFileService.tempFile("queue", id + "." + type);
+        probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
+                .findFirst()
+                .ifPresent(it -> {
+                    FFmpegOutputBuilder fFmpegOutputBuilder = new FFmpegBuilder()
+                            .setInput(probe)
+                            .addOutput(thumbnail.toString())
+                            .setVideoFilter("select='gte(n\\,10)',scale=320:-1");
+                    if (type.equals("webp")) {
+                        long millis = ((long) it.duration) * 1000;
+                        fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000));
+                    }
+                    if (type.equals("png")) {
+                        fFmpegOutputBuilder.setFrames(1);
+                    }
+                    executor.createJob(fFmpegOutputBuilder.done()).run();
+                });
         return thumbnail.toFile();
     }
 
