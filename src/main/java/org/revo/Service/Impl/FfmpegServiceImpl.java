@@ -21,10 +21,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparingInt;
 import static org.revo.Domain.IndexImpl.list;
@@ -68,8 +71,16 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master queue(Master master) throws IOException {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
-        s3Service.pushImage(master.getId() + ".webp", image(probe, master.getId(), "webp"));
-        s3Service.pushImage(master.getId() + ".png", image(probe, master.getId(), "png"));
+        for (Path png : image(probe, master.getId(), "png")) {
+            File file = png.toFile();
+            s3Service.pushImage(png.getFileName().toString(), file);
+            file.delete();
+        }
+        for (Path png : image(probe, master.getId(), "webp")) {
+            File file = png.toFile();
+            s3Service.pushImage(png.getFileName().toString(), file);
+            file.delete();
+        }
         return info(probe, master);
     }
 
@@ -83,25 +94,24 @@ public class FfmpegServiceImpl implements FfmpegService {
         return master;
     }
 
-    private File image(FFmpegProbeResult probe, String id, String type) throws IOException {
-        Path thumbnail = tempFileService.tempFile("queue", id + "." + type);
+    private List<Path> image(FFmpegProbeResult probe, String id, String type) throws IOException {
+        Path thumbnail = tempFileService.tempFile("queue", id + "%d" + "." + type);
         probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
                 .findFirst()
                 .ifPresent(it -> {
                     FFmpegOutputBuilder fFmpegOutputBuilder = new FFmpegBuilder()
                             .setInput(probe)
-                            .addOutput(thumbnail.toString())
-                            .setVideoFilter("select='gte(n\\,10)',scale=320:-1");
+                            .addOutput(thumbnail.toString());
                     if (type.equals("webp")) {
                         long millis = ((long) it.duration) * 1000;
-                        fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000)).addExtraArgs("-loop", "0");
+                        fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000)).addExtraArgs("-loop", "0").setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
                     if (type.equals("png")) {
-                        fFmpegOutputBuilder.setFrames(1);
+                        fFmpegOutputBuilder.setFrames(1).setVideoFilter("fps=(30/60),select='gte(n\\,10)',scale=320:-1");
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
-        return thumbnail.toFile();
+        return Files.walk(thumbnail).filter(it -> Files.isRegularFile(it)).collect(Collectors.toList());
     }
 
     private static String format(long millis) {

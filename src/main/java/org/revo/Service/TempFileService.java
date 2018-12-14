@@ -8,7 +8,7 @@ public interface TempFileService {
 
     Path tempFile(String fun) throws IOException;
 
-    Path tempFile(String fun, String name) throws IOException;
+    Path tempFile(String fun, String name);
 
     void clear(String fun) throws IOException;
 }

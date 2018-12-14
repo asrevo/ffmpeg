@@ -32,7 +32,7 @@ public class TempFileServiceImpl implements TempFileService {
     }
 
     @Override
-    public Path tempFile(String fun, String name) throws IOException {
+    public Path tempFile(String fun, String name) {
         return Paths.get(mkdir(mkdir(mkdir(start).resolve(project)).resolve(fun)).toString(), name);
     }
 
