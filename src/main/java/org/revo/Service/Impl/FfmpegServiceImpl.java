@@ -53,7 +53,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         log.info("source " + source.toFile().toString() + "        " + source.toFile().length() + "        " + source.toFile().getFreeSpace() + "         ");
         long start = System.currentTimeMillis();
         IndexImpl index = payload.getImpls().get(0);
-        Path converted = doConversion(source, index);
+        Path converted = doConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), payload.getId())), index);
         long execution = System.currentTimeMillis() - start;
         log.info("take " + source.toFile().toString() + " " + execution);
         index.setExecution(execution);
@@ -92,13 +92,13 @@ public class FfmpegServiceImpl implements FfmpegService {
         return thumbnail.toFile();
     }
 
-    private Path doConversion(Path in, IndexImpl index) throws IOException {
-        Path out = in.getParent().resolve(index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
+    private Path doConversion(FFmpegProbeResult probe, IndexImpl index) throws IOException {
+        Path out = tempFileService.tempFile("convert", index.getIndex() + UUID.randomUUID().toString().replace("-", ""));
         String[] split = index.getResolution().split("x");
         Integer width = Integer.valueOf(split[0]);
         Integer height = Integer.valueOf(split[1]);
         FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(fFprobe.probe(in.toString()))
+                .setInput(probe)
                 .addOutput(out.toString())
                 .setFormat("mp4")
                 .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
