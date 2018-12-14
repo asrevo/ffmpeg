@@ -40,7 +40,7 @@ public class Receiver {
             tempFileService.clear("convert");
             log.info("receive ffmpeg_converter_pop " + master.getPayload().getId() + " and " + master.getPayload().getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
             Master convert = ffmpegService.convert(master.getPayload());
-            log.info("send bento4_hls " + convert.getId());
+            log.info("send ffmpeg_hls " + convert.getId());
             processor.ffmpeg_hls_push().send(MessageBuilder.withPayload(convert).build());
         } catch (IOException e) {
             log.info("convert error " + e.getMessage());
@@ -67,7 +67,7 @@ public class Receiver {
             List<IndexImpl> impls = queue.getImpls();
             if (queue.isMp4()) {
                 queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-                log.info("send bento4_hls " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
+                log.info("send ffmpeg_hls " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
                 processor.ffmpeg_hls_push().send(MessageBuilder.withPayload(queue).build());
                 processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
             } else {
