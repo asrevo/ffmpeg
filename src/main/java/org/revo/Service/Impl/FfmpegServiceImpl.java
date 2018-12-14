@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Comparator.comparingInt;
 import static org.revo.Domain.IndexImpl.list;
@@ -67,7 +68,8 @@ public class FfmpegServiceImpl implements FfmpegService {
     public Master queue(Master master) throws IOException {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         File image = image(probe, master.getId());
-        s3Service.pushImage(master.getId() + ".png", image);
+//        s3Service.pushImage(master.getId() + ".png", image);
+        log.info("image " + image.toString());
         return info(probe, master);
     }
 
@@ -76,20 +78,33 @@ public class FfmpegServiceImpl implements FfmpegService {
                 map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
-        master.setImage(signedUrlService.getUrl(master.getId() + ".png", "thumb"));
+        master.setImage(signedUrlService.getUrl(master.getId() + ".webp", "thumb"));
         master.setImpls(list(getLess(master.getResolution())));
         return master;
     }
 
     private File image(FFmpegProbeResult probe, String id) throws IOException {
-        Path thumbnail = tempFileService.tempFile("queue", id + ".png");
-        FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(probe)
-                .addOutput(thumbnail.toString())
-                .setFrames(1)
-                .setVideoFilter("select='gte(n\\,10)',scale=320:-1").done();
-        executor.createJob(builder).run();
+        Path thumbnail = tempFileService.tempFile("queue", id + ".webp");
+        probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).forEach(it -> {
+            long millis = ((long) it.duration) * 1000;
+            FFmpegBuilder builder = new FFmpegBuilder()
+                    .setInput(probe)
+                    .addOutput(thumbnail.toString())
+                    .addExtraArgs("-ss", format(millis / 2))
+                    .addExtraArgs("-t", format(3 * 1000))
+                    .setVideoFilter("select='gte(n\\,10)',scale=320:-1").done();
+            executor.createJob(builder).run();
+        });
         return thumbnail.toFile();
+    }
+
+    private static String format(long millis) {
+        return String.format("%02d:%02d:%02d",
+                TimeUnit.MILLISECONDS.toHours(millis),
+                TimeUnit.MILLISECONDS.toMinutes(millis) -
+                        TimeUnit.MINUTES.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
+                TimeUnit.MILLISECONDS.toSeconds(millis) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
     }
 
     private Path doConversion(FFmpegProbeResult probe, IndexImpl index) throws IOException {
