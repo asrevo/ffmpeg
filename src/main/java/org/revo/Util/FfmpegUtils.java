@@ -101,10 +101,10 @@ public class FfmpegUtils {
                 .addExtraArgs("-start_number", "0")
                 .addExtraArgs("-hls_time", "10")
                 .addExtraArgs("-hls_list_size", "0")
-                .addExtraArgs("-hls_enc", "1")
-                .addExtraArgs("-hls_enc_key", master.getSecret())
-                .addExtraArgs("-hls_enc_key_url", master.getId() + ".key")
-                .addExtraArgs("-hls_enc_iv", UUID.randomUUID().toString().replace("-", ""))
+//                .addExtraArgs("-hls_enc", "1")
+//                .addExtraArgs("-hls_enc_key", master.getSecret())
+//                .addExtraArgs("-hls_enc_key_url", master.getId() + ".key")
+//                .addExtraArgs("-hls_enc_iv", UUID.randomUUID().toString().replace("-", ""))
                 .addExtraArgs("-master_pl_name", master.getId() + ".m3u8")
                 .done();
         FFmpegJob job = executor.createJob(builder);
