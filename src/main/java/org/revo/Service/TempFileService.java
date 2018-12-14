@@ -12,5 +12,5 @@ public interface TempFileService {
 
     Path tempFile(String fun, String name);
 
-    void clear(String fun) throws IOException;
+    void clear(String fun);
 }

@@ -36,7 +36,11 @@ public class TempFileServiceImpl implements TempFileService {
         return Paths.get(mkdir(mkdir(mkdir(start).resolve(project)).resolve(fun)).toString(), name);
     }
 
-    public void clear(String fun) throws IOException {
-        FileUtils.deleteDirectory(mkdir(mkdir(mkdir(start).resolve(project)).resolve(fun)).toFile());
+    public void clear(String fun) {
+        try {
+            FileUtils.deleteDirectory(mkdir(mkdir(mkdir(start).resolve(project)).resolve(fun)).toFile());
+        } catch (IOException e) {
+
+        }
     }
 }

@@ -11,14 +11,14 @@ public interface S3Service {
 
     Path pull(String fun, String key) throws IOException;
 
-    void pushMedia(String key, File file);
+    void pushMediaDelete(String key, File file);
 
-    void pushImage(String key, File file);
+    void pushImageDelete(String key, File file);
 
     void deleteMedia(String key);
 
     void push(Path base, Path parent);
 
-    void saveTs(Path path, String key);
+    void saveTsDelete(File path, String key);
 
 }

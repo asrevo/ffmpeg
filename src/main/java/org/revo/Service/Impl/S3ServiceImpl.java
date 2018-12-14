@@ -34,13 +34,15 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public void pushMedia(String key, File file) {
+    public void pushMediaDelete(String key, File file) {
         this.amazonS3Client.putObject(env.getBuckets().get("video").toString(), key, file);
+        file.delete();
     }
 
     @Override
-    public void pushImage(String key, File file) {
+    public void pushImageDelete(String key, File file) {
         this.amazonS3Client.putObject(env.getBuckets().get("thumb").toString(), key, file);
+        file.delete();
     }
 
     @Override
@@ -56,7 +58,7 @@ public class S3ServiceImpl implements S3Service {
                     .filter(it -> it.getFileName().toString().endsWith("ts"))
                     .forEach(it -> {
                         String key = it.toString().substring(base.toString().length() + 1);
-                        saveTs(it, key);
+                        saveTsDelete(it.toFile(), key);
                     });
         } catch (IOException e) {
             e.printStackTrace();
@@ -65,8 +67,9 @@ public class S3ServiceImpl implements S3Service {
 
 
     @Override
-    public void saveTs(Path path, String key) {
-        this.amazonS3Client.putObject(env.getBuckets().get("ts").toString(), key, path.toFile());
+    public void saveTsDelete(File path, String key) {
+        this.amazonS3Client.putObject(env.getBuckets().get("ts").toString(), key, path);
+        path.delete();
     }
 
 
