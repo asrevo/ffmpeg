@@ -17,8 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.springframework.messaging.support.MessageBuilder.withPayload;
-
 /**
  * Created by ashraf on 23/04/17.
  */
@@ -38,22 +36,17 @@ public class Receiver {
     public void convert(Message<Master> master) {
         try {
             tempFileService.clear("convert");
+            tempFileService.clear("hls");
             log.info("receive ffmpeg_converter_pop " + master.getPayload().getId() + " and " + master.getPayload().getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-            Master convert = ffmpegService.convert(master.getPayload());
-            log.info("send ffmpeg_hls " + convert.getId());
-            processor.ffmpeg_hls_push().send(MessageBuilder.withPayload(convert).build());
+            Index index = ffmpegService.hls(ffmpegService.convert(master.getPayload()));
+            log.info("send tube_hls " + index.getId());
+            processor.tube_hls().send(MessageBuilder.withPayload(index).build());
         } catch (IOException e) {
             log.info("convert error " + e.getMessage());
+        } finally {
+            tempFileService.clear("convert");
+            tempFileService.clear("hls");
         }
-    }
-
-    @StreamListener(value = Processor.ffmpeg_hls_pop)
-    public void hls(Message<Master> base) throws IOException {
-        tempFileService.clear("hls");
-        log.info("receive ffmpeg_hls " + base.getPayload().getId());
-        Index index = ffmpegService.hls(base.getPayload());
-        log.info("send tube_hls " + index.getId());
-        processor.tube_hls().send(withPayload(index).build());
     }
 
     @StreamListener(value = Processor.ffmpeg_queue)
@@ -65,23 +58,15 @@ public class Receiver {
             log.info("send tube_info " + queue.getId());
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             List<IndexImpl> impls = queue.getImpls();
-            if (queue.isMp4()) {
-                queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-                log.info("send ffmpeg_hls " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-                processor.ffmpeg_hls_push().send(MessageBuilder.withPayload(queue).build());
-                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5).build());
-            } else {
-                queue.setImpls(impls.stream().limit(1).collect(Collectors.toList()));
-                log.info("send ffmpeg_converter_push " + queue.getId() + " and " + queue.getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority).build());
-            }
-            for (int i = 0; i < impls.stream().skip(1).collect(Collectors.toList()).size(); i++) {
-                queue.setImpls(Collections.singletonList(impls.get(i + 1)));
+            for (int i = 0; i < impls.size(); i++) {
                 log.info("send ffmpeg_converter_push " + queue.getId());
-                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", maxPriority - 5 - i).build());
+                queue.setImpls(Collections.singletonList(impls.get(i)));
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", (queue.isMp4() && i != 0) ? (maxPriority - 5 - i) : (maxPriority)).build());
             }
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
+        } finally {
+            tempFileService.clear("queue");
         }
     }
 }

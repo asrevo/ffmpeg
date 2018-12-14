@@ -1,7 +1,6 @@
 package org.revo.Service.Impl;
 
 import com.comcast.viper.hlsparserj.tags.UnparsedTag;
-import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.revo.Config.Env;
@@ -25,7 +24,6 @@ import static org.revo.Util.Utils.getMasterTag;
 import static org.revo.Util.Utils.read;
 
 @Service
-@Slf4j
 public class FfmpegServiceImpl implements FfmpegService {
     @Autowired
     private S3Service s3Service;
