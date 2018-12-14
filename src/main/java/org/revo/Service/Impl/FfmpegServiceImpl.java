@@ -94,7 +94,7 @@ public class FfmpegServiceImpl implements FfmpegService {
                             .setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     if (type.equals("webp")) {
                         long millis = ((long) it.duration) * 1000;
-                        fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000));
+                        fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000)).addExtraArgs("-loop", "0");
                     }
                     if (type.equals("png")) {
                         fFmpegOutputBuilder.setFrames(1);
