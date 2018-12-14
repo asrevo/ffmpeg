@@ -107,7 +107,7 @@ public class FfmpegServiceImpl implements FfmpegService {
                         fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000)).addExtraArgs("-loop", "0").setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
                     if (type.equals("png")) {
-                        fFmpegOutputBuilder.setVideoFilter("fps=(30/60),select='gte(n\\,10)',scale=320:-1");
+                        fFmpegOutputBuilder.setVideoFilter("fps='(30/60)',select='gte(n\\,10)',scale=320:-1");
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
