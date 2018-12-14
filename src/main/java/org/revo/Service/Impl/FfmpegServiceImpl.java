@@ -89,13 +89,13 @@ public class FfmpegServiceImpl implements FfmpegService {
                 map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
-        master.setImage(signedUrlService.getUrl(master.getId(), "thumb") + "_");
+        master.setImage(signedUrlService.getUrl(master.getId(), "thumb"));
         master.setImpls(list(getLess(master.getResolution())));
         return master;
     }
 
     private List<Path> image(FFmpegProbeResult probe, String id, String type) throws IOException {
-        Path thumbnail = tempFileService.tempFile("queue", id + "_%d" + "." + type);
+        Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("png") ? "_%d" : "") + "." + type);
         probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
                 .findFirst()
                 .ifPresent(it -> {
