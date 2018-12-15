@@ -51,7 +51,7 @@ public class FfmpegUtils {
     }
 
     public List<Path> image(FFmpegProbeResult probe, String id, String type) throws IOException {
-        Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("jpeg") ? "%d" : "") + "." + type);
+        Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("jpeg") ? "_%d" : "") + "." + type);
         probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
                 .findFirst()
                 .ifPresent(it -> {
