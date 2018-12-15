@@ -66,7 +66,7 @@ public class FfmpegUtils {
                         fFmpegOutputBuilder.setVideoFilter("fps='(30/60)',select='gte(n\\,10)',scale=144:-1");
                     }
                     if (type.equals("png")) {
-                        fFmpegOutputBuilder.setFrames(1).setVideoFilter("fps='(30/60)',select='gte(n\\,10)',scale=320:-1");
+                        fFmpegOutputBuilder.setFrames(1).setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
