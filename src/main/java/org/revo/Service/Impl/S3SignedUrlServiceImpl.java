@@ -7,10 +7,12 @@ import org.revo.Config.Env;
 import org.revo.Domain.Bucket;
 import org.revo.Service.SignedUrlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SignedUrlServiceImpl implements SignedUrlService {
+@Profile("s3")
+public class S3SignedUrlServiceImpl implements SignedUrlService {
     @Autowired
     private AmazonS3Client amazonS3Client;
     @Autowired
