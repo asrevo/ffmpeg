@@ -102,7 +102,7 @@ public class FfmpegUtils {
                 .addExtraArgs("-f", "hls")
                 .addExtraArgs("-codec:", "copy")
                 .addExtraArgs("-start_number", "0")
-                .addExtraArgs("-hls_time", "10")
+                .addExtraArgs("-hls_time", "2")
                 .addExtraArgs("-hls_list_size", "0")
                 .addExtraArgs("-hls_enc", "1")
                 .addExtraArgs("-hls_enc_key", master.getSecret())
