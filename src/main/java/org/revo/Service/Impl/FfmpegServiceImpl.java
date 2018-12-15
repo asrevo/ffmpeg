@@ -74,6 +74,10 @@ public class FfmpegServiceImpl implements FfmpegService {
             File file = png.toFile();
             s3Service.pushImageDelete(png.getFileName().toString(), file);
         }
+        for (Path jpeg : ffmpegUtils.image(probe, master.getId(), "jpeg")) {
+            File file = jpeg.toFile();
+            s3Service.pushImageDelete(master.getId() + "/" + jpeg.getFileName().toString(), file);
+        }
         for (Path png : ffmpegUtils.image(probe, master.getId(), "webp")) {
             File file = png.toFile();
             s3Service.pushImageDelete(png.getFileName().toString(), file);

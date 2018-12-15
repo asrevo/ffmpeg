@@ -51,7 +51,7 @@ public class FfmpegUtils {
     }
 
     public List<Path> image(FFmpegProbeResult probe, String id, String type) throws IOException {
-        Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("png") ? "_%d" : "") + "." + type);
+        Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("jpeg") ? "%d" : "") + "." + type);
         probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
                 .findFirst()
                 .ifPresent(it -> {
@@ -62,8 +62,11 @@ public class FfmpegUtils {
                         long millis = ((long) it.duration) * 1000;
                         fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000)).addExtraArgs("-loop", "0").setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
-                    if (type.equals("png")) {
+                    if (type.equals("jpeg")) {
                         fFmpegOutputBuilder.setVideoFilter("fps='(30/60)',select='gte(n\\,10)',scale=144:-1");
+                    }
+                    if (type.equals("png")) {
+                        fFmpegOutputBuilder.setFrames(1).setVideoFilter("fps='(30/60)',select='gte(n\\,10)',scale=320:-1");
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
