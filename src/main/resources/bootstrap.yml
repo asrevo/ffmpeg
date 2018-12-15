@@ -15,7 +15,7 @@ spring:
     config:
       uri: http://${vcap.services.CONFIG_CREDENTIALS.credentials.username}:${vcap.services.CONFIG_CREDENTIALS.credentials.password}@${org.revo.env.config.externalurl:${org.revo.env.config.internalurl}}
   profiles:
-    active: default,prod
+    active: default,prod,cloudFront
 eureka:
   instance:
     instanceId: ${spring.application.name}:${random.value}

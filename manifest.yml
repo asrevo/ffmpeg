@@ -12,4 +12,4 @@ applications:
   - EUREKA_CREDENTIALS
   env:
     ORG_REVO_ENV_CONFIG_EXTERNALURL: configasrevo.cfapps.io
-    SPRING_PROFILES_ACTIVE: default,prod
+    SPRING_PROFILES_ACTIVE: default,prod,cloudFront
