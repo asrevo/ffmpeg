@@ -55,18 +55,18 @@ public class FfmpegUtils {
         probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
                 .findFirst()
                 .ifPresent(it -> {
+                    long millis = ((long) it.duration) * 1000;
                     FFmpegOutputBuilder fFmpegOutputBuilder = new FFmpegBuilder()
                             .setInput(probe)
                             .addOutput(thumbnail.toString());
                     if (type.equals("webp")) {
-                        long millis = ((long) it.duration) * 1000;
                         fFmpegOutputBuilder.addExtraArgs("-ss", format(millis / 2)).addExtraArgs("-t", format(3 * 1000)).addExtraArgs("-loop", "0").setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
                     if (type.equals("jpeg")) {
                         fFmpegOutputBuilder.setVideoFilter("fps='(30/60)',select='gte(n\\,10)',scale=144:-1");
                     }
                     if (type.equals("png")) {
-                        fFmpegOutputBuilder.setFrames(1).setVideoFilter("select='gte(n\\,10)',scale=320:-1");
+                        fFmpegOutputBuilder.setFrames(1).addExtraArgs("-ss", format(millis / 2)).setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
