@@ -35,6 +35,8 @@ public class FfmpegServiceImpl implements FfmpegService {
     private Env env;
     @Autowired
     private FfmpegUtils ffmpegUtils;
+    @Autowired
+    private S3SignedUrlServiceImpl s3SignedUrlService;
 
     @Override
     public Master convert(Master payload) throws IOException {
@@ -69,7 +71,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master queue(Master master) throws IOException {
-        FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
+        FFmpegProbeResult probe = fFprobe.probe(s3SignedUrlService.generate(env.getBuckets().get("video"), master.getId()));
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
             s3Service.pushImageDelete(png.getFileName().toString(), file);
