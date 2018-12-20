@@ -1,6 +1,9 @@
 package org.revo.Service.Impl;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.PEM;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import org.revo.Config.Env;
 import org.revo.Domain.Bucket;
 import org.revo.Service.SignedUrlService;
@@ -34,6 +37,8 @@ public class CloudFrontSignedUrlServiceImpl implements SignedUrlService {
     private String privateKey = "";
     @Autowired
     private Env env;
+    @Autowired
+    private AmazonS3Client amazonS3Client;
 
     @PostConstruct
     public void someInit() throws IOException {
@@ -50,14 +55,31 @@ public class CloudFrontSignedUrlServiceImpl implements SignedUrlService {
 
     @Override
     public String generate(Bucket bucket, String key) {
-        Date expirationDate = new Date(System.currentTimeMillis() + 60 * 60 * 1000);
-        try {
-            return getSignedURLWithCannedPolicy(generateResourcePath(https, bucket.getDomainName(), key), cloudfront_keyId, PEM.readPrivateKey(new ByteArrayInputStream(privateKey.getBytes())), expirationDate);
-        } catch (InvalidKeySpecException | IOException e) {
-            e.printStackTrace();
-        }
-        return key;
+
+        if (bucket.getDomainName() != null) {
+
+            Date expirationDate = new Date(System.currentTimeMillis() + 60 * 60 * 1000);
+            try {
+                return getSignedURLWithCannedPolicy(generateResourcePath(https, bucket.getDomainName(), key), cloudfront_keyId, PEM.readPrivateKey(new ByteArrayInputStream(privateKey.getBytes())), expirationDate);
+            } catch (InvalidKeySpecException | IOException e) {
+                e.printStackTrace();
+            }
+            return key;
+        } else return generateS3(bucket, key);
     }
+
+    private String generateS3(Bucket bucket, String key) {
+        java.util.Date expiration = new java.util.Date();
+        long msec = expiration.getTime();
+        msec += 1000 * 60 * 60;
+        expiration.setTime(msec);
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket.toString(), key);
+        generatePresignedUrlRequest.setMethod(HttpMethod.GET);
+        generatePresignedUrlRequest.setExpiration(expiration);
+        return amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest).toString();
+
+    }
+
 
     @Override
     public String getUrl(String key, String bucket) {
