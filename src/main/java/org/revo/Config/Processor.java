@@ -40,9 +40,4 @@ public interface Processor {
 
     @Output("tube_hls")
     MessageChannel tube_hls();
-
-    String feedback_queue = "feedback_queue";
-
-    @Output("feedback_queue")
-    MessageChannel feedback_queue();
 }
