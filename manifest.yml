@@ -3,7 +3,7 @@ applications:
 - name: ffmpeg
   memory: 1GB
   disk_quota: 2GB
-  instances: 1
+  instances: 2
   random-route: true
   buildpack: java_buildpack
   path: target/ffmpeg-0.0.1.RELEASE.jar
