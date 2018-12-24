@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Getter
@@ -42,5 +43,9 @@ public enum Resolution {
 
     public static int isLess(String resolution1, String resolution2) {
         return Double.compare(getValue(resolution1), getValue(resolution2));
+    }
+
+    public static Optional<Integer> findOne(String resolution) {
+        return Arrays.asList(Resolution.values()).stream().filter(it -> it.resolution.equalsIgnoreCase(resolution)).findAny().map(it -> it.priority);
     }
 }

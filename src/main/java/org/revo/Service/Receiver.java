@@ -5,6 +5,7 @@ import org.revo.Config.Processor;
 import org.revo.Domain.Index;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
+import org.revo.Domain.Resolution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -13,10 +14,9 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonList;
 import static org.revo.Domain.Resolution.isLess;
 
 /**
@@ -59,21 +59,12 @@ public class Receiver {
             Master queue = ffmpegService.queue(master.getPayload());
             log.info("send tube_info " + queue.getId());
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
-            List<IndexImpl> impls = queue.getImpls();
-
-
             queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
-                log.info("sorted is " + it.getResolution()+"   ");
+                Integer priority = Resolution.findOne(it.getResolution()).map(p -> maxPriority - p).orElse(0);
+                log.info("sorted is " + it.getResolution() + " priority " + priority);
+                queue.setImpls(singletonList(it));
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", priority).build());
             });
-
-
-            for (int i = 0; i < impls.size(); i++) {
-                log.info("send ffmpeg_converter_push " + queue.getId());
-                queue.setImpls(Collections.singletonList(impls.get(i)));
-                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", (queue.isMp4() && i != 0) ? (maxPriority - 5 - i) : (maxPriority)).build());
-            }
-
-
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
         } finally {
