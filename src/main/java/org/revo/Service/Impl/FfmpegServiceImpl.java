@@ -72,7 +72,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId()));
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
-            s3Service.pushImageDelete(png.getFileName().toString(), file);
+            s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".png", file);
         }
 /*
         for (Path jpeg : ffmpegUtils.image(probe, master.getId(), "jpeg")) {
@@ -82,7 +82,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 */
         for (Path png : ffmpegUtils.image(probe, master.getId(), "webp")) {
             File file = png.toFile();
-            s3Service.pushImageDelete(png.getFileName().toString(), file);
+            s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".webp", file);
         }
         return ffmpegUtils.info(probe, master);
     }
