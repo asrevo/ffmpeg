@@ -82,7 +82,7 @@ public class FfmpegUtils {
                 .setInput(probe)
                 .addOutput(out.toString())
                 .setFormat("mp4")
-                .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=24 : fontcolor=white: x=((w/20)): y=((h/20))\'")
+                .setVideoFilter("drawtext=\'text=\'" + logo + "\': fontsize=30 : fontcolor=white: x=((w/20)): y=((h/20))\'")
                 .setVideoResolution(width, height)
                 .done();
         FFmpegJob job = executor.createJob(builder);
