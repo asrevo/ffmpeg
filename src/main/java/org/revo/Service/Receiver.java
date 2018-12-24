@@ -61,10 +61,7 @@ public class Receiver {
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
                 queue.setImpls(singletonList(it));
-                Integer priority = findOne(it.getResolution()).map(p -> maxPriority - (it.getIndex().equals(queue.getId()) ? 0 : p)).orElse(0);
-                log.info(it.getIndex()+ "  priority to  " + it.getResolution() + "     " + priority);
-
-                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", priority).build());
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", findOne(it.getResolution()).map(p -> maxPriority - p).orElse(maxPriority)).build());
             });
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
