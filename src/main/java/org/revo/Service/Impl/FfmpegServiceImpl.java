@@ -37,19 +37,19 @@ public class FfmpegServiceImpl implements FfmpegService {
     private FfmpegUtils ffmpegUtils;
 
     @Override
-    public Master convert(Master payload) throws IOException {
+    public Master convert(Master master) throws IOException {
         long start = System.currentTimeMillis();
-        IndexImpl index = payload.getImpls().get(0);
-        Path converted = ffmpegUtils.doConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), payload.getId())), index);
+        IndexImpl index = master.getImpls().get(0);
+        Path converted = ffmpegUtils.doConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId())), index);
         index.setExecution(System.currentTimeMillis() - start);
-        s3Service.pushMediaDelete(index.getIndex(), converted.toFile());
-        payload.setImpls(Collections.singletonList(index));
-        return payload;
+        s3Service.pushMediaDelete(master.getFile() + "/" + master.getId() + "/" + index.getIndex(), converted.toFile());
+        master.setImpls(Collections.singletonList(index));
+        return master;
     }
 
     @Override
     public Index hls(Master master) throws IOException {
-        Path converted = ffmpegUtils.hlsDoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getImpls().get(0).getIndex())), master);
+        Path converted = ffmpegUtils.hlsDoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex())), master);
         Index index = new Index();
         index.setMaster(master.getId());
         index.setId(master.getImpls().get(0).getIndex());
@@ -69,7 +69,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master queue(Master master) throws IOException {
-        FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getId()));
+        FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId()));
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
             s3Service.pushImageDelete(png.getFileName().toString(), file);
