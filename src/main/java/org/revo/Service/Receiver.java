@@ -63,7 +63,7 @@ public class Receiver {
 
 
             queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
-                log.info("sorted is " + it.getResolution());
+                log.info("sorted is " + it.getResolution()+"   ");
             });
 
 

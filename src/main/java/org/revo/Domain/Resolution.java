@@ -8,25 +8,28 @@ import java.util.stream.Collectors;
 
 @Getter
 public enum Resolution {
-    R4320("7680x4320", 7680, 4320),
-    R2160("3840x2160", 3840, 2160),
-    R1440("2560x1440", 2560, 1440),
-    R1080("1920x1080", 1920, 1080),
-    R720("1280x720", 1280, 720),
-    R480("854x480", 854, 480),
-    R360("640x360", 640, 360),
-    R240("426x240", 426, 240),
-    R144("256x144", 256, 144);
+    R4320("7680x4320", 7680, 4320, 8),
+    R2160("3840x2160", 3840, 2160, 7),
+    R1440("2560x1440", 2560, 1440, 4),
+    R1080("1920x1080", 1920, 1080, 6),
+    R720("1280x720", 1280, 720, 3),
+    R480("854x480", 854, 480, 5),
+    R360("640x360", 640, 360, 2),
+    R240("426x240", 426, 240, 1),
+    R144("256x144", 256, 144, 0);
 
-    Resolution(String resolution, int width, int height) {
+    Resolution(String resolution, int width, int height, int priority) {
+
         this.resolution = resolution;
         this.width = width;
         this.height = height;
+        this.priority = priority;
     }
 
     private String resolution;
     private int width;
     private int height;
+    private int priority;
 
     public static List<Resolution> getLess(String resolution) {
         return Arrays.asList(Resolution.values()).stream().filter(it -> getValue(resolution) - getValue(it.resolution) >= 0).collect(Collectors.toList());
