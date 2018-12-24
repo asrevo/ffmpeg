@@ -9,6 +9,7 @@ import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
+import org.revo.Domain.Status;
 import org.revo.Service.SignedUrlService;
 import org.revo.Service.TempFileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +45,10 @@ public class FfmpegUtils {
         master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).max(comparingInt(o -> o.height * o.width)).
                 map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
-        master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
         master.setImage(signedUrlService.getUrl(master.getFile() + "/" + master.getId() + "/" + master.getId(), "thumb"));
-        master.setImpls(list(getLess(master.getResolution())));
+        List<IndexImpl> list = list(getLess(master.getResolution()));
+        list.add(new IndexImpl(master.getId(), master.getResolution(), Status.BINDING, 0));
+        master.setImpls(list);
         return master;
     }
 

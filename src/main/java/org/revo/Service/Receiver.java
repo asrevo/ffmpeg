@@ -5,7 +5,6 @@ import org.revo.Config.Processor;
 import org.revo.Domain.Index;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
-import org.revo.Domain.Resolution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -17,6 +16,7 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
+import static org.revo.Domain.Resolution.findOne;
 import static org.revo.Domain.Resolution.isLess;
 
 /**
@@ -40,7 +40,7 @@ public class Receiver {
             tempFileService.clear("convert");
             tempFileService.clear("hls");
             log.info("receive ffmpeg_converter_pop " + master.getPayload().getId() + " and " + master.getPayload().getImpls().stream().map(IndexImpl::getResolution).collect(Collectors.joining(",")));
-            Index index = ffmpegService.hls(ffmpegService.convert(master.getPayload()));
+            Index index = ffmpegService.hls(master.getPayload().getId().equals(master.getPayload().getImpls().get(0).getIndex()) ? master.getPayload() : ffmpegService.convert(master.getPayload()));
             log.info("send tube_hls " + index.getId());
             processor.tube_hls().send(MessageBuilder.withPayload(index).build());
         } catch (IOException e) {
@@ -60,15 +60,14 @@ public class Receiver {
             log.info("send tube_info " + queue.getId());
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
-                Integer priority = Resolution.findOne(it.getResolution()).map(p -> maxPriority - p).orElse(0);
-                log.info("sorted is " + it.getResolution() + " priority " + priority);
                 queue.setImpls(singletonList(it));
-                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", priority).build());
+                processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", findOne(it.getResolution()).map(p -> maxPriority - (it.getIndex().equals(queue.getId()) ? 0 : p)).orElse(0)).build());
             });
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
         } finally {
             tempFileService.clear("queue");
+            tempFileService.clear("hls");
         }
     }
 }

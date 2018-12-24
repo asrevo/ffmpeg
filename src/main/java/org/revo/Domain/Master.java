@@ -11,7 +11,6 @@ public class Master extends Base {
     private String image;
     private String secret;
     private String file;
-    private boolean mp4;
     private List<IndexImpl> impls;
     private double time;
     private String resolution;
