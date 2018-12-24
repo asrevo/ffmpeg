@@ -45,7 +45,7 @@ public class FfmpegUtils {
                 map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
         master.setMp4(probe.getFormat().format_long_name.equalsIgnoreCase("QuickTime / MOV"));
-        master.setImage(signedUrlService.getUrl(master.getId(), "thumb"));
+        master.setImage(signedUrlService.getUrl(master.getFile() + "/" + master.getId() + "/" + master.getId(), "thumb"));
         master.setImpls(list(getLess(master.getResolution())));
         return master;
     }
