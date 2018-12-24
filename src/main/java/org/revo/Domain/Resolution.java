@@ -3,7 +3,9 @@ package org.revo.Domain;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Getter
@@ -35,5 +37,13 @@ public enum Resolution {
     private static double getValue(String resolution) {
         String[] split = resolution.split("x");
         return Math.pow(Math.pow(Integer.valueOf(split[0]), 2) + Math.pow(Integer.valueOf(split[1]), 2), .5);
+    }
+
+    public static int isLess(String resolution1, String resolution2) {
+        return isLess(Resolution.valueOf(resolution1), Resolution.valueOf(resolution2));
+    }
+
+    public static int isLess(Resolution r1, Resolution r2) {
+        return Comparator.comparing((Function<Resolution, Integer>) o -> o.getWidth() * o.getHeight()).compare(r1, r2);
     }
 }

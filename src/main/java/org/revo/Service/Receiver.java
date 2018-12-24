@@ -17,6 +17,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.revo.Domain.Resolution.isLess;
+
 /**
  * Created by ashraf on 23/04/17.
  */
@@ -58,11 +60,20 @@ public class Receiver {
             log.info("send tube_info " + queue.getId());
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             List<IndexImpl> impls = queue.getImpls();
+
+
+            queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
+                log.info("sorted is " + it.getResolution());
+            });
+
+
             for (int i = 0; i < impls.size(); i++) {
                 log.info("send ffmpeg_converter_push " + queue.getId());
                 queue.setImpls(Collections.singletonList(impls.get(i)));
                 processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", (queue.isMp4() && i != 0) ? (maxPriority - 5 - i) : (maxPriority)).build());
             }
+
+
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
         } finally {
