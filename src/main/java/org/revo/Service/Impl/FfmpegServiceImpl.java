@@ -1,5 +1,7 @@
 package org.revo.Service.Impl;
 
+import com.comcast.viper.hlsparserj.PlaylistFactory;
+import com.comcast.viper.hlsparserj.PlaylistVersion;
 import com.comcast.viper.hlsparserj.tags.UnparsedTag;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
@@ -57,6 +59,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         Optional<UnparsedTag> masterTag = getMasterTag(converted.getParent().resolve(master.getId() + ".m3u8"));
         masterTag.ifPresent(it -> {
             index.setStream(read(converted));
+            index.setTags(PlaylistFactory.parsePlaylist(PlaylistVersion.TWELVE, index.getStream()).getTags());
             index.setAverage_bandwidth(it.getAttributes().get("AVERAGE-BANDWIDTH"));
             index.setBandwidth(it.getAttributes().get("BANDWIDTH"));
             index.setCodecs(it.getAttributes().get("CODECS"));

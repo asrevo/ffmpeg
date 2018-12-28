@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import java.io.File;
 import java.io.IOException;
 
-import static org.revo.Ffmpeg.FfmpegCLI.init;
+import static org.revo.ffmpeg.cli.FfmpegCLI.init;
 
 /**
  * Created by ashraf on 23/04/17.
