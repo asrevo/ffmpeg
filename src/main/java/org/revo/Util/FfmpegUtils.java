@@ -126,6 +126,7 @@ public class FfmpegUtils {
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(probe)
                 .addOutput(out.toString())
+                .setFormat(probe.getFormat().format_name)
                 .addExtraArgs("-f", "segment")
                 .addExtraArgs("-codec:", "copy")
                 .addExtraArgs("-segment_time", "600")
