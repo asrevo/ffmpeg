@@ -63,10 +63,13 @@ public class Receiver {
                 queue.setImpls(singletonList(it));
                 processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", findOne(it.getResolution()).map(p -> maxPriority - p).orElse(maxPriority)).build());
             });
+            log.info("will split");
+            ffmpegService.split(master.getPayload());
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
         } finally {
             tempFileService.clear("queue");
+            tempFileService.clear("split");
             tempFileService.clear("hls");
         }
     }
