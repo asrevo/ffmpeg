@@ -89,4 +89,10 @@ public class FfmpegServiceImpl implements FfmpegService {
         return ffmpegUtils.info(probe, master);
     }
 
+    @Override
+    public Master split(Master master) throws IOException {
+        ffmpegUtils.split(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId())), master);
+        return master;
+    }
+
 }

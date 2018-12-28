@@ -118,4 +118,22 @@ public class FfmpegUtils {
         return out;
     }
 
+    public Path split(FFmpegProbeResult probe, Master master) {
+        Path out = tempFileService.tempFile("split", master.getId() + File.separator + master.getId() + File.separator + master.getId() + "_%d");
+        tempFileService.mkdir(out.getParent().getParent());
+        tempFileService.mkdir(out.getParent());
+
+        FFmpegBuilder builder = new FFmpegBuilder()
+                .setInput(probe)
+                .addOutput(out.toString())
+                .addExtraArgs("-f", "segment")
+                .addExtraArgs("-codec:", "copy")
+                .addExtraArgs("-segment_time", "600")
+                .addExtraArgs("-map", "0")
+                .done();
+        FFmpegJob job = executor.createJob(builder);
+        job.run();
+        log.info("job " + job.getState());
+        return out.getParent();
+    }
 }

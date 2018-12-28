@@ -12,4 +12,6 @@ public interface FfmpegService {
     Index hls(Master master) throws IOException;
 
     Master queue(Master master) throws IOException;
+
+    Master split(Master master) throws IOException;
 }
