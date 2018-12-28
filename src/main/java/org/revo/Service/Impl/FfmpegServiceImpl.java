@@ -58,8 +58,7 @@ public class FfmpegServiceImpl implements FfmpegService {
         index.setExecution(master.getImpls().get(0).getExecution());
         Optional<UnparsedTag> masterTag = getMasterTag(converted.getParent().resolve(master.getId() + ".m3u8"));
         masterTag.ifPresent(it -> {
-            index.setStream(read(converted));
-            index.setTags(PlaylistFactory.parsePlaylist(PlaylistVersion.TWELVE, index.getStream()).getTags());
+            index.setTags(PlaylistFactory.parsePlaylist(PlaylistVersion.TWELVE, read(converted)).getTags());
             index.setAverage_bandwidth(it.getAttributes().get("AVERAGE-BANDWIDTH"));
             index.setBandwidth(it.getAttributes().get("BANDWIDTH"));
             index.setCodecs(it.getAttributes().get("CODECS"));
