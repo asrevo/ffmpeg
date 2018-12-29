@@ -1,5 +1,6 @@
 package org.revo.Service;
 
+import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.revo.Domain.Index;
 import org.revo.Domain.Master;
 
@@ -14,4 +15,7 @@ public interface FfmpegService {
     Master queue(Master master) throws IOException;
 
     Master split(Master master) throws IOException;
+
+    FFmpegProbeResult probe(String bucket, String key) throws IOException;
+
 }

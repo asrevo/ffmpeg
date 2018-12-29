@@ -44,14 +44,14 @@ public class FfmpegServiceImpl implements FfmpegService {
         IndexImpl index = master.getImpls().get(0);
         Path converted = ffmpegUtils.doConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId())), index);
         index.setExecution(System.currentTimeMillis() - start);
-        s3Service.pushMediaDelete(master.getFile() + "/" + master.getId() + "/" + index.getIndex(), converted.toFile());
+        s3Service.pushMediaDelete(master.getFile() + "/" + master.getId() + "/" + index.getIndex() + "/" + index.getIndex(), converted.toFile());
         master.setImpls(Collections.singletonList(index));
         return master;
     }
 
     @Override
     public Index hls(Master master) throws IOException {
-        Path converted = ffmpegUtils.hlsDoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex())), master);
+        Path converted = ffmpegUtils.hlsDoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex())), master);
         Index index = new Index();
         index.setMaster(master.getId());
         index.setId(master.getImpls().get(0).getIndex());
@@ -71,7 +71,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master queue(Master master) throws IOException {
-        FFmpegProbeResult probe = fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId()));
+        FFmpegProbeResult probe = probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId());
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
             s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".png", file);
@@ -91,8 +91,14 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master split(Master master) throws IOException {
-        ffmpegUtils.split(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId())), master);
+        Path videos = ffmpegUtils.split(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()), master);
+        s3Service.pushSplitedVideo(master, videos);
         return master;
+    }
+
+    @Override
+    public FFmpegProbeResult probe(String bucket, String key) throws IOException {
+        return fFprobe.probe(signedUrlService.generate(env.getBuckets().get(bucket), key));
     }
 
 }

@@ -119,14 +119,13 @@ public class FfmpegUtils {
     }
 
     public Path split(FFmpegProbeResult probe, Master master) throws IOException {
-        Path out = tempFileService.tempFile("split", master.getId() + File.separator + master.getId() + File.separator + master.getId() + "_%d."+master.getExt());
+        Path out = tempFileService.tempFile("split", master.getId() + File.separator + master.getId() + File.separator + master.getId() + "_%d." + master.getExt());
         tempFileService.mkdir(out.getParent().getParent());
         tempFileService.mkdir(out.getParent());
         log.info("format " + probe.getFormat().format_name);
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(probe)
                 .addOutput(out.toString())
-//                .setFormat(master.getExt())
                 .addExtraArgs("-f", "segment")
                 .addExtraArgs("-codec:", "copy")
                 .addExtraArgs("-segment_time", "600")
@@ -135,14 +134,6 @@ public class FfmpegUtils {
         FFmpegJob job = executor.createJob(builder);
         job.run();
         log.info("job " + job.getState());
-        Files.walk(out.getParent())
-                .filter(Files::isRegularFile)
-                .map(Path::toFile)
-                .forEach(it -> {
-                    log.info("split found " + it.toString());
-                    it.delete();
-                });
-
         return out.getParent();
     }
 }

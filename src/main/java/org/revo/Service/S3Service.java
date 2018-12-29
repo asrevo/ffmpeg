@@ -1,5 +1,7 @@
 package org.revo.Service;
 
+import org.revo.Domain.Master;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,4 +23,7 @@ public interface S3Service {
 
     void saveTsDelete(File path, String key);
 
+    void saveVideoDelete(File path, String key);
+
+    void pushSplitedVideo(Master master, Path videos) throws IOException;
 }
