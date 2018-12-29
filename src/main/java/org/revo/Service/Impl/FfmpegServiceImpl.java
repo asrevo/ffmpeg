@@ -74,7 +74,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master queue(Master master) throws IOException {
-        FFmpegProbeResult probe = probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()+"_"+(master.getSplits().size() / 2));
+        FFmpegProbeResult probe = probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId() + "_" + (master.getSplits().size() / 2));
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
             s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".png", file);
@@ -95,7 +95,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master split(Master master) throws IOException {
         Path videos = ffmpegUtils.split(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()), master);
-        master.setSplits(Files.walk(videos).map(Path::toString).map(FilenameUtils::getBaseName).collect(Collectors.toList()));
+        master.setSplits(Files.walk(videos).filter(Files::isRegularFile).map(Path::toString).map(FilenameUtils::getBaseName).collect(Collectors.toList()));
         s3Service.pushSplitedVideo(master, videos);
         return master;
     }
