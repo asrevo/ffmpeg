@@ -13,6 +13,7 @@ public class Master extends Base {
     private String ext;
     private String file;
     private List<IndexImpl> impls;
+    private List<String> splits;
     private double time;
     private String resolution;
 }

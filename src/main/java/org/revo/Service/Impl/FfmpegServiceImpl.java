@@ -5,6 +5,7 @@ import com.comcast.viper.hlsparserj.PlaylistVersion;
 import com.comcast.viper.hlsparserj.tags.UnparsedTag;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import org.apache.commons.io.FilenameUtils;
 import org.revo.Config.Env;
 import org.revo.Domain.Index;
 import org.revo.Domain.IndexImpl;
@@ -18,9 +19,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.revo.Util.Utils.getMasterTag;
 import static org.revo.Util.Utils.read;
@@ -92,6 +95,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master split(Master master) throws IOException {
         Path videos = ffmpegUtils.split(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()), master);
+        master.setSplits(Files.walk(videos).map(Path::toString).map(FilenameUtils::getBaseName).collect(Collectors.toList()));
         s3Service.pushSplitedVideo(master, videos);
         return master;
     }
