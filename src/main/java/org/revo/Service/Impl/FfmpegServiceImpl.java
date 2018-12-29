@@ -42,7 +42,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     public Master convert(Master master) throws IOException {
         long start = System.currentTimeMillis();
         IndexImpl index = master.getImpls().get(0);
-        Path converted = ffmpegUtils.doConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getId())), index);
+        Path converted = ffmpegUtils.doConversion(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()), index);
         index.setExecution(System.currentTimeMillis() - start);
         s3Service.pushMediaDelete(master.getFile() + "/" + master.getId() + "/" + index.getIndex() + "/" + index.getIndex(), converted.toFile());
         master.setImpls(Collections.singletonList(index));
@@ -51,7 +51,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Index hls(Master master) throws IOException {
-        Path converted = ffmpegUtils.hlsDoConversion(fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex())), master);
+        Path converted = ffmpegUtils.hlsDoConversion(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex()), master);
         Index index = new Index();
         index.setMaster(master.getId());
         index.setId(master.getImpls().get(0).getIndex());
