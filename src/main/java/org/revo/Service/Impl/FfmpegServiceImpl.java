@@ -74,7 +74,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master queue(Master master) throws IOException {
-        FFmpegProbeResult probe = probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId());
+        FFmpegProbeResult probe = probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()+"_"+(master.getSplits().size() / 2));
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
             s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".png", file);
