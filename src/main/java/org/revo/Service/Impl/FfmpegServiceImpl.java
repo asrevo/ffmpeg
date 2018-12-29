@@ -51,7 +51,7 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Index hls(Master master) throws IOException {
-        Path converted = ffmpegUtils.hlsDoConversion(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex()), master);
+        Path converted = ffmpegUtils.hlsDoConversion(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex()), master);
         Index index = new Index();
         index.setMaster(master.getId());
         index.setId(master.getImpls().get(0).getIndex());
