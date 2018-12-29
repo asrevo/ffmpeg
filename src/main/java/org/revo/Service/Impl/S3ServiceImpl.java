@@ -87,7 +87,7 @@ public class S3ServiceImpl implements S3Service {
                 .filter(Files::isRegularFile)
                 .map(Path::toFile)
                 .forEach(it -> {
-                    saveVideoDelete(it, master.getFile() + "/" + master.getId() + getBaseName(it.toString()));
+                    saveVideoDelete(it, master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + getBaseName(it.toString()));
                 });
 
 
