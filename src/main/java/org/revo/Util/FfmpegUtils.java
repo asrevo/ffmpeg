@@ -122,11 +122,11 @@ public class FfmpegUtils {
         Path out = tempFileService.tempFile("split", master.getId() + File.separator + master.getId() + File.separator + master.getId() + "_%d");
         tempFileService.mkdir(out.getParent().getParent());
         tempFileService.mkdir(out.getParent());
-
+        log.info("format " + probe.getFormat().format_name);
         FFmpegBuilder builder = new FFmpegBuilder()
                 .setInput(probe)
                 .addOutput(out.toString())
-                .setFormat(probe.getFormat().format_name)
+                .setFormat(master.getExt())
                 .addExtraArgs("-f", "segment")
                 .addExtraArgs("-codec:", "copy")
                 .addExtraArgs("-segment_time", "600")
