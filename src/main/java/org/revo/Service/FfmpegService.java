@@ -14,8 +14,10 @@ public interface FfmpegService {
 
     Master queue(Master master) throws IOException;
 
+    Master image(Master master) throws IOException;
+
     Master split(Master master) throws IOException;
 
-    FFmpegProbeResult probe(String bucket, String key) throws IOException;
+    FFmpegProbeResult probe(Master master, String key) throws IOException;
 
 }

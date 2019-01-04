@@ -12,20 +12,18 @@ import java.util.stream.Collectors;
 public class IndexImpl {
     private String index;
     private String resolution;
-    private Status status;
-    private long execution;
+    private Status status = Status.BINDING;
+    private long execution = 0;
 
     public IndexImpl() {
     }
 
-    public IndexImpl(String index, String resolution, Status status, long execution) {
+    public IndexImpl(String index, String resolution) {
         this.index = index;
         this.resolution = resolution;
-        this.status = status;
-        this.execution = execution;
     }
 
     public static List<IndexImpl> list(List<Resolution> less) {
-        return less.stream().map(it -> new IndexImpl(new ObjectId().toString(), it.getResolution(), Status.BINDING, 0)).collect(Collectors.toList());
+        return less.stream().map(it -> new IndexImpl(new ObjectId().toString(), it.getResolution())).collect(Collectors.toList());
     }
 }

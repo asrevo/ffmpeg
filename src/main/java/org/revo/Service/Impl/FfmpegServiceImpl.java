@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.nio.file.Paths.get;
 import static org.revo.Util.Utils.getMasterTag;
 import static org.revo.Util.Utils.read;
 
@@ -45,20 +46,21 @@ public class FfmpegServiceImpl implements FfmpegService {
     public Master convert(Master master) throws IOException {
         long start = System.currentTimeMillis();
         IndexImpl index = master.getImpls().get(0);
-        Path converted = ffmpegUtils.doConversion(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()), index);
+        Path converted = ffmpegUtils.doConversion(probe(master, get(master.getId(), master.getId()).toString()), index);
         index.setExecution(System.currentTimeMillis() - start);
-        s3Service.pushMediaDelete(master.getFile() + "/" + master.getId() + "/" + index.getIndex() + "/" + index.getIndex(), converted.toFile());
+        s3Service.pushMediaDelete(getPath(master, get(index.getIndex(), index.getIndex()).toString()), converted.toFile());
         master.setImpls(Collections.singletonList(index));
         return master;
     }
 
     @Override
     public Index hls(Master master) throws IOException {
-        Path converted = ffmpegUtils.hlsDoConversion(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getImpls().get(0).getIndex() + "/" + master.getImpls().get(0).getIndex()), master);
+        IndexImpl im = master.getImpls().get(0);
+        Path converted = ffmpegUtils.hlsDoConversion(probe(master, get(im.getIndex(), im.getIndex()).toString()), master);
         Index index = new Index();
         index.setMaster(master.getId());
-        index.setId(master.getImpls().get(0).getIndex());
-        index.setExecution(master.getImpls().get(0).getExecution());
+        index.setId(im.getIndex());
+        index.setExecution(im.getExecution());
         Optional<UnparsedTag> masterTag = getMasterTag(converted.getParent().resolve(master.getId() + ".m3u8"));
         masterTag.ifPresent(it -> {
             index.setTags(PlaylistFactory.parsePlaylist(PlaylistVersion.TWELVE, read(converted)).getTags());
@@ -74,10 +76,15 @@ public class FfmpegServiceImpl implements FfmpegService {
 
     @Override
     public Master queue(Master master) throws IOException {
-        FFmpegProbeResult probe = probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId() + "_" + (master.getSplits().size() / 2));
+        return ffmpegUtils.info(probe(master, get(master.getId(), master.getId()).toString()), master);
+    }
+
+    @Override
+    public Master image(Master master) throws IOException {
+        FFmpegProbeResult probe = probe(master, get(master.getId(), master.getSplits().get((master.getSplits().size() / 2))).toString());
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
-            s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".png", file);
+            s3Service.pushImageDelete(getPath(master, master.getId() + ".png"), file);
         }
 /*
         for (Path jpeg : ffmpegUtils.image(probe, master.getId(), "jpeg")) {
@@ -87,22 +94,26 @@ public class FfmpegServiceImpl implements FfmpegService {
 */
         for (Path png : ffmpegUtils.image(probe, master.getId(), "webp")) {
             File file = png.toFile();
-            s3Service.pushImageDelete(master.getFile() + "/" + master.getId() + "/" + master.getId() + ".webp", file);
+            s3Service.pushImageDelete(getPath(master, master.getId() + ".webp"), file);
         }
-        return ffmpegUtils.info(probe, master);
+        master.setImage(signedUrlService.getUrl(getPath(master, master.getId()), "thumb"));
+        return master;
     }
 
     @Override
     public Master split(Master master) throws IOException {
-        Path videos = ffmpegUtils.split(probe("video", master.getFile() + "/" + master.getId() + "/" + master.getId() + "/" + master.getId()), master);
+        Path videos = ffmpegUtils.split(probe(master, get(master.getId(), master.getId()).toString()), master);
         master.setSplits(Files.walk(videos).filter(Files::isRegularFile).map(Path::toString).map(FilenameUtils::getBaseName).collect(Collectors.toList()));
         s3Service.pushSplitedVideo(master, videos);
         return master;
     }
 
     @Override
-    public FFmpegProbeResult probe(String bucket, String key) throws IOException {
-        return fFprobe.probe(signedUrlService.generate(env.getBuckets().get(bucket), key));
+    public FFmpegProbeResult probe(Master master, String key) throws IOException {
+        return fFprobe.probe(signedUrlService.generate(env.getBuckets().get("video"), getPath(master, key)));
     }
 
+    private String getPath(Master master, String key) {
+        return get(master.getFile(), master.getId(), key).toString();
+    }
 }

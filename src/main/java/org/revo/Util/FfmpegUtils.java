@@ -9,8 +9,6 @@ import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
-import org.revo.Domain.Status;
-import org.revo.Service.SignedUrlService;
 import org.revo.Service.TempFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,9 +20,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static java.nio.file.Files.*;
 import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.of;
+import static net.bramp.ffmpeg.probe.FFmpegStream.CodecType.VIDEO;
 import static org.revo.Domain.IndexImpl.list;
 import static org.revo.Domain.Resolution.getLess;
 import static org.revo.Util.Utils.format;
@@ -35,26 +38,21 @@ public class FfmpegUtils {
     @Autowired
     private TempFileService tempFileService;
     @Autowired
-    private SignedUrlService signedUrlService;
-    @Autowired
     private FFmpegExecutor executor;
     @Value("${logo}")
     private String logo;
 
     public Master info(FFmpegProbeResult probe, Master master) {
-        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO).max(comparingInt(o -> o.height * o.width)).
+        master.setResolution(probe.getStreams().stream().filter(it -> it.codec_type == VIDEO).max(comparingInt(o -> o.height * o.width)).
                 map(it -> ((it.width / 2) * 2) + "x" + ((it.height / 2) * 2)).orElse(""));
         master.setTime(probe.getFormat().duration);
-        master.setImage(signedUrlService.getUrl(master.getFile() + "/" + master.getId() + "/" + master.getId(), "thumb"));
-        List<IndexImpl> list = list(getLess(master.getResolution()));
-        list.add(new IndexImpl(master.getId(), master.getResolution(), Status.BINDING, 0));
-        master.setImpls(list);
+        master.setImpls(concat(list(getLess(master.getResolution())).stream(), of(new IndexImpl(master.getId(), master.getResolution()))).collect(toList()));
         return master;
     }
 
     public List<Path> image(FFmpegProbeResult probe, String id, String type) throws IOException {
         Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("jpeg") ? "_%d" : "") + "." + type);
-        probe.getStreams().stream().filter(it -> it.codec_type == FFmpegStream.CodecType.VIDEO)
+        probe.getStreams().stream().filter(it -> it.codec_type == VIDEO)
                 .findFirst()
                 .ifPresent(it -> {
                     long millis = ((long) it.duration) * 1000;
@@ -72,7 +70,7 @@ public class FfmpegUtils {
                     }
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
-        return Files.walk(thumbnail.getParent()).filter(it -> Files.isRegularFile(it)).collect(Collectors.toList());
+        return walk(thumbnail.getParent()).filter(it -> isRegularFile(it)).collect(toList());
     }
 
     public Path doConversion(FFmpegProbeResult probe, IndexImpl index) {

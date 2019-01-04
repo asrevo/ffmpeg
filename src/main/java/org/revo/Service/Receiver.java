@@ -57,7 +57,7 @@ public class Receiver {
             tempFileService.clear("queue");
             log.info("receive ffmpeg_queue " + master.getPayload().getId());
             log.info("will split");
-            Master queue = ffmpegService.queue(ffmpegService.split(master.getPayload()));
+            Master queue = ffmpegService.image(ffmpegService.queue(ffmpegService.split(master.getPayload())));
             log.info("send tube_info " + queue.getId());
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
