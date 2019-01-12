@@ -9,6 +9,7 @@ import org.revo.Domain.Bucket;
 import org.revo.Service.SignedUrlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ import static com.amazonaws.services.cloudfront.util.SignerUtils.Protocol.https;
 import static com.amazonaws.services.cloudfront.util.SignerUtils.generateResourcePath;
 
 @Service
+@Primary
 @Profile("cloudFront")
 public class CloudFrontSignedUrlServiceImpl implements SignedUrlService {
 

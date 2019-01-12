@@ -7,6 +7,7 @@ import org.revo.Config.Env;
 import org.revo.Domain.Bucket;
 import org.revo.Service.SignedUrlService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
