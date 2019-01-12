@@ -19,7 +19,7 @@ public class Util {
     @Bean
     public FFmpegExecutor executor() {
         try {
-//            init();
+            init();
             FFprobe ffprobe = new FFprobe(System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffprobe");
             FFmpeg ffmpeg = new FFmpeg(System.getProperty("user.home") + File.separator + "ffmpeg" + File.separator + "bin" + File.separator + "ffmpeg");
             return new FFmpegExecutor(ffmpeg, ffprobe);
