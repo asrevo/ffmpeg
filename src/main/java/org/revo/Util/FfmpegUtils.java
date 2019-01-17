@@ -71,7 +71,9 @@ public class FfmpegUtils {
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
         try {
-            return walk(thumbnail.getParent()).filter(it -> isRegularFile(it)).collect(toList());
+            return walk(thumbnail.getParent())
+                    .peek(it -> log.info("found " + it + "   " + isRegularFile(it)))
+                    .filter(it -> isRegularFile(it)).collect(toList());
         } catch (IOException e) {
             log.info("error  jjjjjjj " + e.getMessage());
 
