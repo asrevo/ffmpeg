@@ -3,7 +3,6 @@ package org.revo.Service.Impl;
 import com.comcast.viper.hlsparserj.PlaylistFactory;
 import com.comcast.viper.hlsparserj.PlaylistVersion;
 import com.comcast.viper.hlsparserj.tags.UnparsedTag;
-import lombok.extern.slf4j.Slf4j;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import org.apache.commons.io.FilenameUtils;
@@ -31,7 +30,6 @@ import static org.revo.Util.Utils.getMasterTag;
 import static org.revo.Util.Utils.read;
 
 @Service
-@Slf4j
 public class FfmpegServiceImpl implements FfmpegService {
     @Autowired
     private S3Service s3Service;
@@ -84,10 +82,8 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master image(Master master) throws IOException {
         FFmpegProbeResult probe = probe(master, get(master.getId(), master.getSplits().get((master.getSplits().size() / 2))).toString());
-        log.info("got the probe  >> png");
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
-            log.info(" file png "+file.toString()+"   "+file.exists());
             s3Service.pushImageDelete(getPath(master, master.getId() + ".png"), file);
         }
 /*
@@ -96,13 +92,10 @@ public class FfmpegServiceImpl implements FfmpegService {
             s3Service.pushImageDelete(master.getId() + "/" + jpeg.getFileName().toString(), file);
         }
 */
-/*
         for (Path png : ffmpegUtils.image(probe, master.getId(), "webp")) {
             File file = png.toFile();
-            log.info(" file webp "+file.toString()+"   "+file.exists());
             s3Service.pushImageDelete(getPath(master, master.getId() + ".webp"), file);
         }
-*/
         master.setImage(signedUrlService.getUrl(getPath(master, master.getId()), "thumb"));
         return master;
     }

@@ -6,6 +6,7 @@ import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.builder.FFmpegOutputBuilder;
 import net.bramp.ffmpeg.job.FFmpegJob;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
 import org.revo.Service.TempFileService;
@@ -15,13 +16,13 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
-import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.Files.walk;
+import static java.nio.file.Files.*;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
@@ -49,7 +50,7 @@ public class FfmpegUtils {
         return master;
     }
 
-    public List<Path> image(FFmpegProbeResult probe, String id, String type) {
+    public List<Path> image(FFmpegProbeResult probe, String id, String type) throws IOException {
         Path thumbnail = tempFileService.tempFile("queue", id + (type.equals("jpeg") ? "_%d" : "") + "." + type);
         probe.getStreams().stream().filter(it -> it.codec_type == VIDEO)
                 .findFirst()
@@ -67,18 +68,9 @@ public class FfmpegUtils {
                     if (type.equals("png")) {
                         fFmpegOutputBuilder.setFrames(1).addExtraArgs("-ss", format(millis / 2)).setVideoFilter("select='gte(n\\,10)',scale=320:-1");
                     }
-                    log.info("job will start");
                     executor.createJob(fFmpegOutputBuilder.done()).run();
                 });
-        try {
-            return walk(thumbnail.getParent())
-                    .peek(it -> log.info("found " + it + "   " + isRegularFile(it)))
-                    .filter(it -> isRegularFile(it)).collect(toList());
-        } catch (IOException e) {
-            log.info("error  jjjjjjj " + e.getMessage());
-
-            return Collections.emptyList();
-        }
+        return walk(thumbnail.getParent()).filter(it -> isRegularFile(it)).collect(toList());
     }
 
     public Path doConversion(FFmpegProbeResult probe, IndexImpl index) {
@@ -135,7 +127,6 @@ public class FfmpegUtils {
                 .addExtraArgs("-f", "segment")
                 .addExtraArgs("-codec:", "copy")
                 .addExtraArgs("-segment_time", "600")
-                .addExtraArgs("-map", "0")
                 .done();
         FFmpegJob job = executor.createJob(builder);
         job.run();
