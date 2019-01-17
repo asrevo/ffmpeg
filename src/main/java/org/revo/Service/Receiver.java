@@ -2,22 +2,13 @@ package org.revo.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.revo.Config.Processor;
-import org.revo.Domain.Index;
-import org.revo.Domain.IndexImpl;
 import org.revo.Domain.Master;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.integration.annotation.MessageEndpoint;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
-
-import java.io.IOException;
-import java.util.stream.Collectors;
-
-import static java.util.Collections.singletonList;
-import static org.revo.Domain.Resolution.findOne;
-import static org.revo.Domain.Resolution.isLess;
+import reactor.core.publisher.Flux;
 
 /**
  * Created by ashraf on 23/04/17.
@@ -34,8 +25,13 @@ public class Receiver {
     @Value("${spring.cloud.stream.rabbit.bindings.ffmpeg_converter_pop.consumer.max-priority}")
     private Integer maxPriority;
 
-    @StreamListener(value = Processor.ffmpeg_converter_pop)
-    public void convert(Message<Master> master) {
+    @StreamListener()
+    public void convert(@Input(Processor.ffmpeg_converter_pop) Flux<Master> master) {
+        master.doOnNext(it -> {
+            log.info("receive ffmpeg_converter_pop " + it.getId());
+        }).subscribe();
+
+/*
         try {
             tempFileService.clear("convert");
             tempFileService.clear("hls");
@@ -49,10 +45,16 @@ public class Receiver {
             tempFileService.clear("convert");
             tempFileService.clear("hls");
         }
+*/
     }
 
-    @StreamListener(value = Processor.ffmpeg_queue)
-    public void queue(Message<Master> master) {
+    @StreamListener()
+    public void queue(@Input(Processor.ffmpeg_queue) Flux<Master> master) {
+        master.doOnNext(it -> {
+            log.info("receive ffmpeg_queue " + it.getId());
+        }).subscribe();
+
+/*
         try {
             tempFileService.clear("queue");
             log.info("receive ffmpeg_queue " + master.getPayload().getId());
@@ -71,5 +73,6 @@ public class Receiver {
             tempFileService.clear("split");
             tempFileService.clear("hls");
         }
+*/
     }
 }
