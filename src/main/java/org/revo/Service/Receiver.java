@@ -60,12 +60,16 @@ public class Receiver {
             Master sss = ffmpegService.queue(ffmpegService.split(master.getPayload()));
             log.info("get the queue " + sss.getId() + " " + sss.getSplits());
             Master queue = ffmpegService.image(sss);
+            log.info("get the image " + sss.getId() );
+
+/*
             log.info("send tube_info " + queue.getId());
             processor.tube_info().send(MessageBuilder.withPayload(queue).build());
             queue.getImpls().stream().sorted((o1, o2) -> isLess(o1.getResolution(), o2.getResolution())).forEach(it -> {
                 queue.setImpls(singletonList(it));
                 processor.ffmpeg_converter_push().send(MessageBuilder.withPayload(queue).setHeader("priority", findOne(it.getResolution()).map(p -> maxPriority - p).orElse(maxPriority)).build());
             });
+*/
         } catch (IOException e) {
             log.info("queue error " + e.getMessage());
         } finally {

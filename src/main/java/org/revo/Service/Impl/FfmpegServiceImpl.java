@@ -84,6 +84,7 @@ public class FfmpegServiceImpl implements FfmpegService {
     @Override
     public Master image(Master master) throws IOException {
         FFmpegProbeResult probe = probe(master, get(master.getId(), master.getSplits().get((master.getSplits().size() / 2))).toString());
+        log.info("got the probe  >> png");
         for (Path png : ffmpegUtils.image(probe, master.getId(), "png")) {
             File file = png.toFile();
             log.info(" file png "+file.toString()+"   "+file.exists());
@@ -95,11 +96,13 @@ public class FfmpegServiceImpl implements FfmpegService {
             s3Service.pushImageDelete(master.getId() + "/" + jpeg.getFileName().toString(), file);
         }
 */
+/*
         for (Path png : ffmpegUtils.image(probe, master.getId(), "webp")) {
             File file = png.toFile();
             log.info(" file webp "+file.toString()+"   "+file.exists());
             s3Service.pushImageDelete(getPath(master, master.getId() + ".webp"), file);
         }
+*/
         master.setImage(signedUrlService.getUrl(getPath(master, master.getId()), "thumb"));
         return master;
     }
